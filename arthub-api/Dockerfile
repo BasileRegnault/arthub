@@ -27,7 +27,7 @@ COPY composer.json composer.lock symfony.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 COPY . .
-RUN chmod -R 775 var/
+RUN mkdir -p var/cache var/log && chmod -R 775 var/
 
 # --- Étape 2 : Image finale ---
 FROM php:8.3-fpm-alpine
