@@ -65,9 +65,9 @@ COPY --from=builder /app /app
 # Les vraies valeurs sont injectées via docker-compose (variables d'environnement)
 RUN echo "APP_ENV=prod" > /app/.env && echo "APP_DEBUG=0" >> /app/.env
 
-# Créer les dossiers d'upload
-RUN mkdir -p public/uploads/artworks \
-    && chown -R www-data:www-data var/ public/uploads/
+# Créer les dossiers nécessaires avec les bonnes permissions
+RUN mkdir -p public/uploads/artworks config/jwt \
+    && chown -R www-data:www-data var/ public/uploads/ config/jwt/
 
 EXPOSE 9000
 
