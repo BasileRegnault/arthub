@@ -61,6 +61,10 @@ WORKDIR /app
 
 COPY --from=builder /app /app
 
+# Fichier .env minimal requis par Symfony au démarrage
+# Les vraies valeurs sont injectées via docker-compose (variables d'environnement)
+RUN echo "APP_ENV=prod" > /app/.env && echo "APP_DEBUG=0" >> /app/.env
+
 # Créer les dossiers d'upload
 RUN mkdir -p public/uploads/artworks \
     && chown -R www-data:www-data var/ public/uploads/
