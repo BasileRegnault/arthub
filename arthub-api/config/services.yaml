@@ -27,11 +27,11 @@ services:
             $loginIpUsernameLimiter: '@limiter.login_ip_username'
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_failure }  
-    App\State\GalleryViewsCollectionDecorator:
+    App\State\GalleryCollectionViewsProvider:
         decorates: 'api_platform.doctrine.orm.state.collection_provider'
         autowire: false
         arguments:
-            $decorated: '@App\State\GalleryViewsCollectionDecorator.inner'
+            $decorated: '@App\State\GalleryCollectionViewsProvider.inner'
             $viewsRepo: '@App\Repository\GalleryDailyViewRepository'
     App\State\GalleryViewsItemDecorator:
         decorates: 'api_platform.doctrine.orm.state.item_provider'

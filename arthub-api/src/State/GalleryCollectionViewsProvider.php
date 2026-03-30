@@ -7,7 +7,7 @@ use ApiPlatform\State\ProviderInterface;
 use App\Entity\Gallery;
 use App\Repository\GalleryDailyViewRepository;
 
-final class GalleryViewsCollectionDecorator implements ProviderInterface
+final class GalleryCollectionViewsProvider implements ProviderInterface
 {
     public function __construct(
         private $decorated,
