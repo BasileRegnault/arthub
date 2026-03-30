@@ -40,6 +40,8 @@ services:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET:?Définir APP_SECRET dans .env}
       DATABASE_URL: "pgsql://${POSTGRES_USER:-arthub_user}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB:-arthub_db}?serverVersion=16"
+      JWT_SECRET_KEY: /app/config/jwt/private.pem
+      JWT_PUBLIC_KEY: /app/config/jwt/public.pem
       JWT_PASSPHRASE: ${JWT_PASSPHRASE:?Définir JWT_PASSPHRASE dans .env}
       CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-'^https?://(localhost|arthub\.fr)(:[0-9]+)?$'}
       MAILER_DSN: ${MAILER_DSN:-smtp://localhost:1025}
