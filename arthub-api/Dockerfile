@@ -3,7 +3,7 @@
 # ============================================
 
 # --- Étape 1 : Installation des dépendances ---
-FROM php:8.2-fpm-alpine AS builder
+FROM php:8.3-fpm-alpine AS builder
 
 RUN apk add --no-cache \
     postgresql-dev \
@@ -32,7 +32,7 @@ RUN composer run-script post-install-cmd \
     && chmod -R 775 var/
 
 # --- Étape 2 : Image finale ---
-FROM php:8.2-fpm-alpine
+FROM php:8.3-fpm-alpine
 
 RUN apk add --no-cache \
     postgresql-dev \
