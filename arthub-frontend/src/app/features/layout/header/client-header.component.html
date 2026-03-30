@@ -1,0 +1,293 @@
+<header
+  [class]="scrolled() ? 'bg-white shadow-md' : 'bg-white/95 backdrop-blur-sm'"
+  class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-slate-200">
+  <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+
+      <!-- Logo -->
+      <div class="flex-shrink-0">
+        <a routerLink="/" class="flex items-center gap-3 group" (click)="closeMenus()">
+          <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center shadow-sm group-hover:bg-slate-700 transition-colors duration-300">
+            <span class="text-white font-bold text-xl">A</span>
+          </div>
+          <span class="text-xl font-bold text-slate-800">ArtHub</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <div class="hidden md:flex items-center gap-1">
+        <a
+          routerLink="/artworks"
+          routerLinkActive="bg-slate-100 text-slate-900"
+          [routerLinkActiveOptions]="{exact: false}"
+          class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 font-medium">
+          Oeuvres
+        </a>
+        <a
+          routerLink="/artists"
+          routerLinkActive="bg-slate-100 text-slate-900"
+          [routerLinkActiveOptions]="{exact: false}"
+          class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 font-medium">
+          Artistes
+        </a>
+        <a
+          routerLink="/galleries"
+          routerLinkActive="bg-slate-100 text-slate-900"
+          [routerLinkActiveOptions]="{exact: false}"
+          class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 font-medium">
+          Galeries
+        </a>
+        <a
+          routerLink="/map"
+          routerLinkActive="bg-slate-100 text-slate-900"
+          [routerLinkActiveOptions]="{exact: false}"
+          class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 font-medium">
+          Carte
+        </a>
+      </div>
+
+      <!-- Desktop Auth Actions -->
+      <div class="hidden md:flex items-center gap-3">
+        @if (isAuthenticated()) {
+          <!-- Contribute Menu -->
+          <div class="relative">
+            <button
+              (click)="toggleContributeMenu()"
+              class="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-all duration-200 font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Contribuer
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- Dropdown -->
+            @if (contributeMenuOpen()) {
+              <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg py-1 border border-slate-200 overflow-hidden">
+                <a
+                  routerLink="/artworks/create"
+                  (click)="closeMenus()"
+                  class="flex items-center gap-3 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                  <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Ajouter une œuvre
+                </a>
+                <a
+                  routerLink="/artists/create"
+                  (click)="closeMenus()"
+                  class="flex items-center gap-3 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                  <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Ajouter un artiste
+                </a>
+                <div class="h-px bg-slate-200 my-1"></div>
+                <a
+                  routerLink="/my-submissions"
+                  (click)="closeMenus()"
+                  class="flex items-center gap-3 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                  <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Mes soumissions
+                </a>
+              </div>
+            }
+          </div>
+
+          <!-- User Menu -->
+          <div class="relative">
+            <button
+              (click)="toggleUserMenu()"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 transition-all duration-200 border border-transparent hover:border-slate-200"
+              aria-label="User menu">
+              <div class="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center">
+                <span class="text-white text-sm font-medium">
+                  {{ (currentUser?.username || 'U')[0].toUpperCase() }}
+                </span>
+              </div>
+              <span class="text-slate-700 font-medium">{{ currentUser?.username }}</span>
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- Dropdown -->
+            @if (userMenuOpen()) {
+              <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-1 border border-slate-200 overflow-hidden">
+                <a
+                  routerLink="/profile"
+                  (click)="closeMenus()"
+                  class="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                  Mon profil
+                </a>
+                <a
+                  routerLink="/galleries/my-galleries"
+                  (click)="closeMenus()"
+                  class="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                  Mes galeries
+                </a>
+                <a
+                  routerLink="/ratings/my-ratings"
+                  (click)="closeMenus()"
+                  class="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                  Mes notes
+                </a>
+                <div class="h-px bg-slate-200 my-1"></div>
+                <button
+                  (click)="logout()"
+                  class="block w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors font-medium">
+                  Deconnexion
+                </button>
+              </div>
+            }
+          </div>
+        } @else {
+          <a
+            routerLink="/auth/login"
+            class="px-4 py-2 text-slate-600 hover:text-slate-900 transition-colors font-medium">
+            Connexion
+          </a>
+          <a
+            routerLink="/auth/register"
+            class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-medium">
+            S'inscrire
+          </a>
+        }
+      </div>
+
+      <!-- Mobile menu button -->
+      <button
+        (click)="toggleMobileMenu()"
+        class="md:hidden p-2 rounded-lg hover:bg-slate-100 transition"
+        aria-label="Toggle menu">
+        @if (!mobileMenuOpen()) {
+          <svg class="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        } @else {
+          <svg class="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        }
+      </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    @if (mobileMenuOpen()) {
+      <div class="md:hidden py-4 border-t border-slate-200">
+        <div class="flex flex-col gap-1">
+          <a
+            routerLink="/artworks"
+            routerLinkActive="bg-slate-100 text-slate-900"
+            (click)="closeMenus()"
+            class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+            Oeuvres
+          </a>
+          <a
+            routerLink="/artists"
+            routerLinkActive="bg-slate-100 text-slate-900"
+            (click)="closeMenus()"
+            class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+            Artistes
+          </a>
+          <a
+            routerLink="/galleries"
+            routerLinkActive="bg-slate-100 text-slate-900"
+            (click)="closeMenus()"
+            class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+            Galeries
+          </a>
+          <a
+            routerLink="/map"
+            routerLinkActive="bg-slate-100 text-slate-900"
+            (click)="closeMenus()"
+            class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+            Carte
+          </a>
+
+          @if (isAuthenticated()) {
+            <!-- Section Contribuer -->
+            <div class="h-px bg-slate-200 my-2"></div>
+            <div class="px-4 py-1 text-xs font-bold text-slate-400 uppercase tracking-wide">Contribuer</div>
+            <a
+              routerLink="/artworks/create"
+              (click)="closeMenus()"
+              class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium flex items-center gap-2">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Ajouter une œuvre
+            </a>
+            <a
+              routerLink="/artists/create"
+              (click)="closeMenus()"
+              class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium flex items-center gap-2">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Ajouter un artiste
+            </a>
+            <a
+              routerLink="/my-submissions"
+              (click)="closeMenus()"
+              class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium flex items-center gap-2">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Mes soumissions
+            </a>
+
+            <!-- Section Profil -->
+            <div class="h-px bg-slate-200 my-2"></div>
+            <div class="px-4 py-1 text-xs font-bold text-slate-400 uppercase tracking-wide">Mon compte</div>
+            <a
+              routerLink="/profile"
+              (click)="closeMenus()"
+              class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+              Mon profil
+            </a>
+            <a
+              routerLink="/galleries/my-galleries"
+              (click)="closeMenus()"
+              class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+              Mes galeries
+            </a>
+            <a
+              routerLink="/ratings/my-ratings"
+              (click)="closeMenus()"
+              class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+              Mes notes
+            </a>
+            <div class="h-px bg-slate-200 my-2"></div>
+            <button
+              (click)="logout()"
+              class="text-left px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition font-medium">
+              Deconnexion
+            </button>
+          } @else {
+            <div class="h-px bg-slate-200 my-2"></div>
+            <a
+              routerLink="/auth/login"
+              (click)="closeMenus()"
+              class="px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition font-medium">
+              Connexion
+            </a>
+            <a
+              routerLink="/auth/register"
+              (click)="closeMenus()"
+              class="px-4 py-2.5 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition text-center font-medium">
+              S'inscrire
+            </a>
+          }
+        </div>
+      </div>
+    }
+  </nav>
+</header>
+
+<!-- Spacer to prevent content from hiding under fixed header -->
+<div class="h-16"></div>

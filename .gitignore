@@ -1,0 +1,96 @@
+# ============================================
+# .gitignore — ArtHub Monorepo
+# Couvre : Symfony (API) + Angular (Frontend) + Docker
+# ============================================
+
+
+# ============================================
+# SYMFONY (arthub-api/)
+# ============================================
+
+arthub-api/vendor/
+arthub-api/var/
+arthub-api/public/uploads/
+arthub-api/public/bundles/
+
+# Fichiers d'environnement sensibles
+arthub-api/.env.local
+arthub-api/.env.*.local
+
+# Clés JWT (ne jamais committer)
+arthub-api/config/jwt/private.pem
+arthub-api/config/jwt/public.pem
+
+# Cache PHP
+arthub-api/.php-cs-fixer.cache
+arthub-api/.phpunit.result.cache
+
+
+# ============================================
+# ANGULAR (arthub-frontend/)
+# ============================================
+
+arthub-frontend/node_modules/
+arthub-frontend/dist/
+arthub-frontend/.angular/
+
+# Cache Angular/ESBuild
+arthub-frontend/.cache/
+
+# Fichiers d'environnement locaux
+arthub-frontend/.env.local
+
+
+# ============================================
+# DOCKER & ENVIRONNEMENT
+# ============================================
+
+# Variables d'environnement (contient mots de passe, secrets)
+.env
+.env.local
+.env.*.local
+
+# Garder le fichier d'exemple
+!.env.docker
+!.env.example
+!.env.dist
+
+
+# ============================================
+# IDE & ÉDITEURS
+# ============================================
+
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+nbproject/
+
+
+# ============================================
+# SYSTÈME D'EXPLOITATION
+# ============================================
+
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+
+# ============================================
+# LOGS & TEMPORAIRES
+# ============================================
+
+*.log
+*.tmp
+*.swp
+*.swo
+.sass-cache/

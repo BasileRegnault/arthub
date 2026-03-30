@@ -1,0 +1,232 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center gap-4">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-800">
+        Galerie – {{ gallery?.name }}
+      </h2>
+      <p class="text-sm text-gray-500">
+        {{ gallery?.isPublic ? 'Publique' : 'Privée' }} • {{ totalViews || 0 }} vues
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span
+        class="px-3 py-1 rounded text-sm font-medium"
+        [class.bg-blue-100]="gallery?.isPublic"
+        [class.text-blue-700]="gallery?.isPublic"
+        [class.bg-gray-100]="!gallery?.isPublic"
+        [class.text-gray-700]="!gallery?.isPublic">
+        {{ gallery?.isPublic ? 'Publique' : 'Privée' }}
+      </span>
+
+      <app-detail-actions
+        [id]="gallery?.id"
+        resource="galleries"
+        [showPreview]="true"
+        [previewLink]="['/admin/preview/galleries', gallery?.id]"
+        [editLink]="['/admin/galleries/edit', gallery?.id]"
+        [backLink]="['/admin/galleries']"
+        deleteTitle="Supprimer la galerie"
+        [itemTitle]="gallery?.name || ('#' + gallery?.id)">
+    </app-detail-actions>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b flex gap-6">
+    @for (tab of tabs; track tab.key) {
+      <button
+        (click)="setTab(tab.key)"
+        class="pb-2 text-sm font-medium transition"
+        [class.border-b-2]="activeTab === tab.key"
+        [class.border-blue-600]="activeTab === tab.key"
+        [class.text-blue-600]="activeTab === tab.key"
+        [class.text-gray-500]="activeTab !== tab.key"
+        [class.hover:text-gray-700]="activeTab !== tab.key">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- INFO -->
+  @if (activeTab === 'info') {
+    <div class="grid grid-cols-2 gap-6 bg-white p-6 rounded shadow">
+      @if (gallery?.coverImage?.contentUrl) {
+        <img
+          [src]="gallery?.coverImage?.contentUrl"
+          class="w-48 h-32 object-cover rounded border col-span-2"
+          alt="Couverture de la galerie">
+      } @else {
+        <div class="w-48 h-32 bg-gray-100 rounded border flex items-center justify-center col-span-2">
+          Pas d'image
+        </div>
+      }
+
+      <div>
+        <div class="text-sm text-gray-500">Nom</div>
+        <div class="font-medium">{{ gallery?.name }}</div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Description</div>
+        <div class="font-medium">{{ gallery?.description || '—' }}</div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Créé par</div>
+        <div class="font-medium">
+          <a [routerLink]="['/admin/users', gallery?.createdBy?.id]" class="text-blue-600 hover:underline">
+            {{ gallery?.createdBy?.username }}
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Créé le</div>
+        <div>{{ gallery?.createdAt | dateDisplay:true }}</div>
+      </div>
+    </div>
+  }
+
+  <!-- ARTWORKS -->
+  @if (activeTab === 'artworks') {
+    <div class="grid grid-cols-3 gap-6">
+      @for (artwork of artworks; track artwork.id) {
+        <div class="bg-white rounded shadow p-4">
+          @if (artwork.image?.contentUrl) {
+            <img
+              [src]="artwork.image.contentUrl"
+              class="w-full h-40 object-cover rounded mb-3"
+              alt="Œuvre">
+          }
+          <h3 class="font-semibold">{{ artwork.title }}</h3>
+          <p class="text-sm text-gray-500 line-clamp-2">
+            {{ artwork.description || '—' }}
+          </p>
+          <div class="text-xs text-gray-400 mt-2">
+            {{ artwork.type }} • {{ artwork.style }}
+          </div>
+          @if (artwork.id) {
+            <a
+              [routerLink]="['/admin/artworks', artwork.id]"
+              class="inline-block mt-3 text-blue-600 hover:underline text-sm">
+              Voir l'œuvre
+            </a>
+          }
+        </div>
+      } @empty {
+        <div class="col-span-3 text-center text-gray-500 py-6">
+          Aucune œuvre dans cette galerie.
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ACTIVITY -->
+  @if (activeTab === 'activity') {
+    <div class="space-y-4">
+      @if (!activityLogs?.length) {
+        <div class="text-gray-500">
+          Aucun historique.
+        </div>
+      } @else {
+        <div class="relative border-l border-gray-200 ml-4">
+          @for (log of activityLogs; track log.id) {
+            <div class="mb-8 ml-6">
+              <span class="absolute -left-1.5 w-3 h-3 rounded-full bg-blue-600"></span>
+
+              <div class="bg-white shadow rounded-lg p-4">
+                <div class="flex justify-between items-center">
+                  <span class="font-semibold text-gray-800">{{ log.action }}</span>
+                  <span class="text-xs text-gray-500">{{ log.createdAt | dateDisplay:true }}</span>
+                </div>
+
+                <p class="text-sm text-gray-600">
+                  {{ log.entityClass }} #{{ log.entityId }}
+                </p>
+
+                <p class="text-sm text-gray-500">
+                  By {{ log.userConnected?.username }}
+                </p>
+
+                @if (log.oldValues || log.newValues) {
+                  <div class="grid grid-cols-2 gap-4 mt-4 text-xs">
+                    @if (log.oldValues) {
+                      <div class="bg-red-50 p-3 rounded">
+                        <div class="font-semibold text-red-700 mb-1">Old</div>
+                        <pre>{{ log.oldValues | json }}</pre>
+                      </div>
+                    }
+
+                    @if (log.newValues) {
+                      <div class="bg-green-50 p-3 rounded">
+                        <div class="font-semibold text-green-700 mb-1">New</div>
+                        <pre>{{ log.newValues | json }}</pre>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- VIEWS -->
+  @if (activeTab === 'views') {
+    <div class="space-y-6">
+      <div class="bg-white p-6 rounded shadow">
+        <div class="flex items-center justify-between gap-4 mb-4">
+          <div class="font-semibold">Évolution des vues</div>
+          <select
+            class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [value]="viewsRange"
+            (change)="onRangeChange($any($event.target).value)">
+            <option [value]="7">7 jours</option>
+            <option [value]="30">30 jours</option>
+            <option [value]="90">90 jours</option>
+            <option [value]="365">365 jours</option>
+          </select>
+        </div>
+
+        <div class="h-64">
+          <canvas id="galleryViewsChart" class="h-64"></canvas>
+        </div>
+
+        @if (!viewSeries?.length) {
+          <div class="text-gray-500 mt-3">
+            Pas de données sur la période.
+          </div>
+        }
+      </div>
+
+      <div class="bg-white rounded shadow overflow-x-auto">
+        <div class="p-4 border-b font-semibold">Vues par jour (uniques)</div>
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 text-sm">
+            <tr>
+              <th class="px-4 py-2 text-left">Date</th>
+              <th class="px-4 py-2 text-right">Vues</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of viewSeries; track v.date) {
+              <tr class="border-t">
+                <td class="px-4 py-2">{{ v.date }}</td>
+                <td class="px-4 py-2 text-right font-semibold">{{ v.views }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="2" class="px-4 py-6 text-center text-gray-500">
+                  Aucune vue sur cette période.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

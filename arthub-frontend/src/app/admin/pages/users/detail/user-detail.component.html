@@ -1,0 +1,244 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-800">
+        Information sur l'utilisateur – {{ user?.username }}
+      </h2>
+      <p class="text-sm text-gray-500">Mail :{{ user?.email }}</p>
+    </div>
+
+    <span
+      class="px-3 py-1 rounded text-sm font-medium"
+      [class.bg-red-100]="user?.isSuspended"
+      [class.text-red-700]="user?.isSuspended"
+      [class.bg-green-100]="!user?.isSuspended"
+      [class.text-green-700]="!user?.isSuspended">
+      {{ user?.isSuspended ? 'Suspended' : 'Active' }}
+    </span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b flex gap-6">
+    @for (tab of tabs; track tab.key) {
+      <button
+        (click)="activeTab = tab.key"
+        class="pb-2 text-sm font-medium transition"
+        [class.border-b-2]="activeTab === tab.key"
+        [class.border-blue-600]="activeTab === tab.key"
+        [class.text-blue-600]="activeTab === tab.key"
+        [class.text-gray-500]="activeTab !== tab.key"
+        [class.hover:text-gray-700]="activeTab !== tab.key">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- ================= TAB CONTENT ================= -->
+
+  <!-- INFO -->
+  @if (activeTab === 'info') {
+    <div class="grid grid-cols-2 gap-6 bg-white p-6 rounded shadow">
+
+      <img
+        [src]="user?.profilePicture?.contentUrl || '/assets/avatar-placeholder.png'"
+        class="w-24 h-24 rounded-full object-cover border"
+        alt="Photo utilisateur"
+      />
+      <div>
+        <div class="text-sm text-gray-500">Username</div>
+        <div class="font-medium">{{ user?.username }}</div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Email</div>
+        <div class="font-medium">{{ user?.email }}</div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Roles</div>
+        <div class="flex gap-2 flex-wrap">
+          @for (role of user?.roles; track role) {
+            <span class="px-2 py-1 bg-gray-100 rounded text-xs">
+              {{ role }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">Created at</div>
+        <div>{{ user?.createdAt | dateDisplay:true }}</div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ACTIVITY LOG -->
+  @if (activeTab === 'activity') {
+    <div class="space-y-4">
+
+      @if (!activityLogs?.length) {
+        <div class="text-gray-500">
+          No activity logs.
+        </div>
+      } @else {
+        <div class="relative border-l border-gray-200 ml-4">
+
+          @for (log of activityLogs; track log.id) {
+            <div class="mb-8 ml-6">
+
+              <span class="absolute -left-1.5 w-3 h-3 rounded-full bg-blue-600"></span>
+
+              <div class="bg-white shadow rounded-lg p-4">
+
+                <div class="flex justify-between items-center">
+                  <span class="font-semibold text-gray-800">
+                    {{ log.action }}
+                  </span>
+                  <span class="text-xs text-gray-500">
+                    {{ log.createdAt | dateDisplay:true }}
+                  </span>
+                </div>
+
+                <p class="text-sm text-gray-600">
+                  {{ log.entityClass }} #{{ log.entityId }}
+                </p>
+
+                <p class="text-sm text-gray-500">
+                  By {{ log.userConnected?.username }}
+                </p>
+
+                @if (log.oldValues || log.newValues) {
+                  <div class="grid grid-cols-2 gap-4 mt-4 text-xs">
+
+                    @if (log.oldValues) {
+                      <div class="bg-red-50 p-3 rounded">
+                        <div class="font-semibold text-red-700 mb-1">Old</div>
+                        <pre>{{ log.oldValues | json }}</pre>
+                      </div>
+                    }
+
+                    @if (log.newValues) {
+                      <div class="bg-green-50 p-3 rounded">
+                        <div class="font-semibold text-green-700 mb-1">New</div>
+                        <pre>{{ log.newValues | json }}</pre>
+                      </div>
+                    }
+
+                  </div>
+                }
+
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+  }
+
+  <!-- LOGIN LOGS -->
+  @if (activeTab === 'logins') {
+    <table class="w-full bg-white rounded shadow">
+      <thead class="bg-gray-50 text-sm">
+        <tr>
+          <th class="px-4 py-2 text-left">IP</th>
+          <th class="px-4 py-2">Event</th>
+          <th class="px-4 py-2">User agent</th>
+          <th class="px-4 py-2 text-right">Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (log of loginLogs; track log.id) {
+          <tr class="border-t">
+            <td class="px-4 py-2">{{ log.ip }}</td>
+            <td class="px-4 py-2">{{ log.event }}</td>
+            <td class="px-4 py-2 text-xs truncate max-w-xs">
+              {{ log.userAgent || '—' }}
+            </td>
+            <td class="px-4 py-2 text-right text-sm">
+              {{ log.createdAt | dateDisplay:true }}
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="px-4 py-4 text-center text-gray-500">No login logs.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <!-- GALLERIES -->
+  @if (activeTab === 'galleries') {
+    <div class="grid grid-cols-3 gap-6">
+      @for (gallery of galleries; track gallery.id) {
+        <div class="bg-white rounded shadow p-4">
+
+          @if (gallery.coverImage?.contentUrl) {
+            <img
+              [src]="gallery.coverImage.contentUrl"
+              class="w-full h-40 object-cover rounded mb-3">
+          }
+
+          <h3 class="font-semibold">{{ gallery.name }}</h3>
+          <p class="text-sm text-gray-500 line-clamp-2">
+            {{ gallery.description || '—' }}
+          </p>
+
+          <div class="text-xs text-gray-400 mt-2">
+            Views: {{ gallery.views || 0 }}
+          </div>
+
+        </div>
+      } @empty {
+        <div class="col-span-3 text-center text-gray-500">No galleries.</div>
+      }
+    </div>
+  }
+
+  <!-- RATINGS -->
+  @if (activeTab === 'ratings') {
+    <table class="w-full bg-white rounded shadow">
+      <thead class="bg-gray-50 text-sm">
+        <tr>
+          <th class="px-4 py-2 text-left">Artwork</th>
+          <th class="px-4 py-2 text-center">Note</th>
+          <th class="px-4 py-2">Comment</th>
+          <th class="px-4 py-2 text-right">Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (rating of ratings; track rating.id) {
+          <tr class="border-t">
+            <td class="px-4 py-3">
+              <a
+                [routerLink]="['/admin/artworks', getArtworkId(rating.artwork)]"
+                class="text-blue-600 hover:underline">
+                #{{ getArtworkId(rating.artwork) }}
+              </a>
+            </td>
+            <td class="px-4 py-2 text-center font-semibold">
+              {{ rating.score }}
+            </td>
+            <td class="px-4 py-2 text-gray-600">
+              {{ rating.comment || '—' }}
+            </td>
+            <td class="px-4 py-2 text-right text-sm">
+              {{ rating.createdAt | dateDisplay:true }}
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="px-4 py-4 text-center text-gray-500">No ratings.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+</div>

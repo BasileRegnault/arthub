@@ -1,0 +1,154 @@
+# ============================================
+# GitHub Actions — CI/CD ArtHub
+# ============================================
+# Déclenché sur chaque push sur la branche main.
+#
+# Étapes :
+#   1. Build image Docker API  → push sur ghcr.io
+#   2. Build image Docker Frontend → push sur ghcr.io
+#   3. SSH sur le VPS → pull images → restart → migrations
+# ============================================
+
+name: Deploy ArtHub
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/arthub-api
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/arthub-frontend
+
+jobs:
+
+  # --------------------------------------------------
+  # JOB 1 : Build et push de l'image API (Symfony)
+  # --------------------------------------------------
+  build-api:
+    name: Build API
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Connexion à GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extraire les métadonnées Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.API_IMAGE }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Activer le cache Docker (BuildKit)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build et push image API
+        uses: docker/build-push-action@v5
+        with:
+          context: ./arthub-api
+          dockerfile: ./arthub-api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+  # --------------------------------------------------
+  # JOB 2 : Build et push de l'image Frontend (Angular)
+  # --------------------------------------------------
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Connexion à GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extraire les métadonnées Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Activer le cache Docker (BuildKit)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build et push image Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./arthub-frontend
+          dockerfile: ./arthub-frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          # Injecter l'URL de l'API (configurée dans les secrets GitHub)
+          build-args: |
+            API_BASE_URL=${{ secrets.API_BASE_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+  # --------------------------------------------------
+  # JOB 3 : Déploiement sur le VPS OVH
+  # --------------------------------------------------
+  deploy:
+    name: Deploy sur VPS
+    runs-on: ubuntu-latest
+    needs: [build-api, build-frontend]  # Attend que les 2 builds soient OK
+
+    steps:
+      - name: Déployer via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            echo "=== Mise à jour du dépôt ==="
+            cd /opt/arthub
+            git pull origin main
+
+            echo "=== Connexion à ghcr.io ==="
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "=== Pull des nouvelles images ==="
+            docker compose pull
+
+            echo "=== Redémarrage des conteneurs ==="
+            docker compose up -d --remove-orphans
+
+            echo "=== Migrations base de données ==="
+            # Attendre que l'API soit prête
+            sleep 5
+            docker compose exec -T api php bin/console doctrine:migrations:migrate --env=prod --no-interaction
+
+            echo "=== Nettoyage des anciennes images ==="
+            docker image prune -f
+
+            echo "=== Déploiement terminé ==="

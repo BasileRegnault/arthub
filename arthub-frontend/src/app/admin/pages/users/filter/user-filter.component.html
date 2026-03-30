@@ -1,0 +1,101 @@
+<div class="bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 space-y-4">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold text-gray-700">Filtres</h3>
+    <span class="text-sm text-gray-400 hidden md:inline">Recherche avancée</span>
+  </div>
+
+  <!-- Formulaire -->
+  <form [formGroup]="form"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+
+    <!-- Username -->
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+      <input
+        type="text"
+        formControlName="username"
+        placeholder="Nom d'utilisateur"
+        class="border border-gray-300 rounded-lg px-3 py-2
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+      />
+    </div>
+
+    <!-- Email -->
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium text-gray-700">Email</label>
+      <input
+        type="email"
+        formControlName="email"
+        placeholder="Email"
+        class="border border-gray-300 rounded-lg px-3 py-2
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+      />
+    </div>
+
+    <!-- Role -->
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium text-gray-700">Rôle</label>
+      <select
+        formControlName="role"
+        class="border border-gray-300 rounded-lg px-3 py-2
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full">
+        <option value="">Tous</option>
+        @for (r of roles; track r) {
+          <option [value]="r">{{ r }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- CreatedAt between -->
+    <app-date-range-input label="Créé entre" [formGroup]="form" afterControl="createdAtAfter" beforeControl="createdAtBefore" />
+
+    <!-- Suspension toggle -->
+    <div class="flex items-center gap-2 md:col-span-4 mt-2">
+      <span class="text-sm font-medium text-gray-700">Suspension :</span>
+
+      <div class="flex rounded-lg border overflow-hidden shadow-sm">
+        <button type="button"
+                class="px-3 py-2 text-sm sm:px-4 sm:py-2"
+                [class.bg-gray-100]="form.value.isSuspended === ''"
+                (click)="setIsSuspended('')">
+          Tous
+        </button>
+
+        <button type="button"
+                class="px-3 py-2 text-sm sm:px-4 sm:py-2"
+                [class.bg-green-500]="form.value.isSuspended === false"
+                [class.text-white]="form.value.isSuspended === false"
+                (click)="setIsSuspended(false)">
+          Actif
+        </button>
+
+        <button type="button"
+                class="px-3 py-2 text-sm sm:px-4 sm:py-2"
+                [class.bg-red-500]="form.value.isSuspended === true"
+                [class.text-white]="form.value.isSuspended === true"
+                (click)="setIsSuspended(true)">
+          Suspendu
+        </button>
+      </div>
+    </div>
+
+  </form>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-3 pt-3 border-t">
+    <button type="button"
+            (click)="resetFilters()"
+            class="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50 transition">
+      Réinitialiser
+    </button>
+
+    <button type="button"
+            (click)="submit()"
+            class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+      Rechercher
+    </button>
+  </div>
+
+</div>

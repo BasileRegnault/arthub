@@ -1,0 +1,72 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+  <form
+    [formGroup]="form"
+    class="bg-white p-8 rounded-xl shadow w-full max-w-md space-y-4"
+    (ngSubmit)="submit()"
+  >
+
+    <!-- 🔙 Bouton retour -->
+    <app-back-button label="Retour"></app-back-button>
+
+    <h1 class="text-2xl font-bold text-center">Inscription</h1>
+
+    <input
+      type="email"
+      placeholder="Email"
+      formControlName="email"
+      class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+    />
+
+    <input
+      type="text"
+      placeholder="Nom d'utilisateur"
+      formControlName="username"
+      class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+    />
+
+    <input
+      type="password"
+      placeholder="Mot de passe"
+      formControlName="password"
+      class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+    />
+
+    <input
+    type="password"
+      placeholder="Confirmer le mot de passe"
+      formControlName="confirmPassword"
+      class="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+    />
+
+    <p *ngIf="form.errors?.['passwordsMismatch'] && form.touched" class="text-red-500 text-sm text-center">
+      Les mots de passe ne correspondent pas
+    </p>
+
+    <!-- ❌ Erreur -->
+    <p *ngIf="error" class="text-red-500 text-sm text-center">
+      {{ error }}
+    </p>
+
+    <!-- ✅ Submit -->
+    <button
+      type="submit"
+      [disabled]="loading"
+      class="w-full bg-black text-white py-2 rounded hover:bg-gray-800 disabled:opacity-50"
+    >
+      {{ loading ? 'Patientez...' : "S'inscrire" }}
+    </button>
+
+    <!-- 🔑 Déjà un compte -->
+    <p class="text-center text-sm text-gray-600">
+      Déjà un compte ?
+      <a
+        routerLink="/auth/login"
+        [queryParams]="{ returnUrl: returnUrl }"
+        class="text-blue-600 hover:underline font-medium"
+      >
+        Se connecter
+      </a>
+    </p>
+
+  </form>
+</div>

@@ -1,0 +1,172 @@
+<div class="space-y-6">
+
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-semibold text-gray-800">Artistes a valider</h2>
+
+    <button
+      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
+      [disabled]="selectedIds().size === 0 || loading()"
+      (click)="openBulkValidateModal()">
+      Valider la selection ({{ selectedIds().size }})
+    </button>
+  </div>
+
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg mt-6">
+    <table class="min-w-full divide-y divide-gray-200">
+
+      <thead class="bg-gray-50 sticky top-0 z-10">
+        <tr>
+          <th class="px-4 py-3 text-center">
+            <input type="checkbox" [checked]="allSelectedOnPage()" (change)="toggleAll($event)" />
+          </th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Photo</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Prenom</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Nom</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Cree par</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Nationalite</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Ne le</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Decede le</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Biographie</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Cree le</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-700">Validation</th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-700">Actions</th>
+        </tr>
+      </thead>
+
+      @if (!loading()) {
+        <tbody class="bg-white divide-y divide-gray-200">
+          @for (artist of artistsWithImages(); track artist.id) {
+            <tr class="hover:bg-gray-50 transition">
+
+              <td class="px-4 py-3 text-center">
+                <input
+                  type="checkbox"
+                  [checked]="selectedIds().has(artist.id)"
+                  (change)="toggleSelection(artist.id)" />
+              </td>
+
+              <td class="px-4 py-3">
+                <img [src]="artist.imageUrl" class="w-10 h-10 rounded-full object-cover" />
+              </td>
+
+              <td class="px-4 py-3">{{ artist.firstname }}</td>
+              <td class="px-4 py-3">{{ artist.lastname }}</td>
+
+              <td class="px-4 py-3">
+                @if (getUserId(artist.createdBy) !== '—') {
+                  <a
+                    [routerLink]="['/admin/users', getUserId(artist.createdBy)]"
+                    class="text-blue-600 hover:underline">
+                    {{ getUsername(artist.createdBy) }}
+                  </a>
+                } @else {
+                  <span>—</span>
+                }
+              </td>
+
+              <td class="px-4 py-3">{{ artist.nationality || '—' }}</td>
+              <td class="px-4 py-3">{{ artist.bornAt | dateDisplay:true }}</td>
+              <td class="px-4 py-3">{{ artist.diedAt ? (artist.diedAt | dateDisplay:true) : '—' }}</td>
+
+              <td class="px-4 py-3">
+                <div
+                  class="text-gray-700 cursor-pointer"
+                  [ngClass]="{'line-clamp-2': !expandedBiography().has(artist.id)}"
+                  (click)="toggleBiography(artist.id)">
+                  {{ artist.biography || '—' }}
+                </div>
+              </td>
+
+              <td class="px-4 py-3">{{ artist.createdAt | dateDisplay:true }}</td>
+
+              <td class="px-4 py-3 text-center">
+                <div class="inline-flex gap-2">
+                  <button
+                    (click)="openValidateModal('approved', artist.id)"
+                    class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition">
+                    Valider
+                  </button>
+
+                  <button
+                    (click)="openValidateModal('rejected', artist.id)"
+                    class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                    Refuser
+                  </button>
+                </div>
+              </td>
+
+              <td class="px-4 py-3 text-center flex justify-center gap-2">
+                <button class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 transition" (click)="onEdit(artist.id)" title="Editer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4v7l10 10 7-7L11 4z" />
+                  </svg>
+                </button>
+                 <button class="w-8 h-8 flex items-center justify-center rounded-full bg-green-50 hover:bg-green-100 text-green-600 transition" (click)="onPreview(artist.id)" title="Apercu">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </td>
+
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="12" class="px-6 py-6 text-center text-gray-500">
+                Aucun artiste a valider.
+              </td>
+            </tr>
+          }
+        </tbody>
+      } @else {
+        <tbody>
+          <tr>
+            <td colspan="12" class="px-6 py-6 text-center text-gray-500">
+              Chargement...
+            </td>
+          </tr>
+        </tbody>
+      }
+
+    </table>
+  </div>
+
+  <div class="flex justify-center gap-4 mt-4">
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 transition"
+      [disabled]="page() <= 1 || loading()"
+      (click)="setPage(page() - 1)">
+      <- Precedent
+    </button>
+
+    <span class="px-2 py-1 text-gray-700 font-medium">Page {{ page() }}</span>
+
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 transition"
+      [disabled]="!hasNextPage() || loading()"
+      (click)="setPage(page() + 1)">
+      Suivant ->
+    </button>
+  </div>
+
+  <div class="flex gap-3 mt-4">
+    <span class="px-3 py-1 bg-gray-100 rounded text-gray-800">
+      Total : {{ artists()?.total || 0 }}
+    </span>
+    <span class="px-3 py-1 bg-blue-100 rounded text-blue-800">
+      Sur cette page : {{ artists()?.items?.length || 0 }}
+    </span>
+  </div>
+
+</div>
+
+<app-validation-reason-modal
+  [open]="modalOpen()"
+  [title]="modalTitle()"
+  [subtitle]="modalSubtitle()"
+  [confirmLabel]="modalConfirmLabel()"
+  [confirmClass]="modalConfirmClass()"
+  [loading]="modalLoading()"
+  (closed)="closeModal()"
+  (submitted)="submitModal($event)"
+></app-validation-reason-modal>

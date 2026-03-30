@@ -1,0 +1,25 @@
+<div
+  class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer"
+  (drop)="onDrop($event)"
+  (dragover)="onDragOver($event)"
+>
+  <input
+    type="file"
+    accept="image/*"
+    class="hidden"
+    #fileInput
+    (change)="onFileSelected($event)"
+  />
+  
+  <div (click)="fileInput.click()">
+    <p class="text-gray-600">Déposer une image ou cliquer pour sélectionner</p>
+  </div>
+
+  <!-- Preview (backend ou locale) -->
+  <div *ngIf="preview()" class="mt-4 flex justify-center">
+    <img
+      [src]="preview()!"
+      class="max-h-48 rounded-lg shadow-md"
+    />
+  </div>
+</div>

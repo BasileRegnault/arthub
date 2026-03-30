@@ -1,0 +1,227 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-800">
+        {{ artist?.firstname }} {{ artist?.lastname }}
+      </h2>
+      <p class="text-sm text-gray-500">
+        Nationalité : {{ artist?.nationality || '—' }}
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      @if (artist?.toBeConfirmed) {
+        <span class="px-3 py-1 rounded text-sm font-medium bg-yellow-100 text-yellow-700">
+          À confirmer
+        </span>
+      } @else {
+        <span class="px-3 py-1 rounded text-sm font-medium bg-green-100 text-green-700">
+          Confirmé
+        </span>
+      }
+
+      <app-detail-actions
+        [id]="artist?.id"
+        resource="artists"
+        [showPreview]="true"
+        [previewLink]="['/admin/preview/artists', artist?.id]"
+        [editLink]="['/admin/artists/edit', artist?.id]"
+        [backLink]="['/admin/artists']"
+        deleteTitle="Supprimer l'artiste"
+        [itemTitle]="(artist?.firstname || '') + ' ' + (artist?.lastname || '')">
+      </app-detail-actions>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b flex gap-6">
+    @for (tab of tabs; track tab.key) {
+      <button
+        (click)="activeTab = tab.key"
+        class="pb-2 text-sm font-medium transition"
+        [class.border-b-2]="activeTab === tab.key"
+        [class.border-blue-600]="activeTab === tab.key"
+        [class.text-blue-600]="activeTab === tab.key"
+        [class.text-gray-500]="activeTab !== tab.key"
+        [class.hover:text-gray-700]="activeTab !== tab.key">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- INFO -->
+  @if (activeTab === 'info') {
+    <div class="bg-white p-6 rounded shadow">
+      <div class="flex gap-8">
+        <!-- PHOTO -->
+        <div class="flex-shrink-0">
+          <img
+            [src]="artist?.profilePicture?.contentUrl || '/assets/avatar-placeholder.jpg'"
+            class="w-32 h-32 rounded-full object-cover border"
+            alt="Photo artiste"
+          />
+        </div>
+
+        <!-- INFORMATIONS -->
+        <div class="flex-1 grid grid-cols-2 gap-6">
+          <div>
+            <div class="text-sm text-gray-500">Nom complet</div>
+            <div class="font-medium">
+              {{ artist?.firstname }} {{ artist?.lastname }}
+            </div>
+          </div>
+
+          <div>
+            <div class="text-sm text-gray-500">Nationalité</div>
+            <div class="font-medium">
+              {{ artist?.nationality || '—' }}
+            </div>
+          </div>
+
+          <div>
+            <div class="text-sm text-gray-500">Date de naissance</div>
+            <div class="font-medium">
+              {{ artist?.bornAt | dateDisplay:true }}
+            </div>
+          </div>
+
+          <div>
+            <div class="text-sm text-gray-500">Date de décès</div>
+            <div class="font-medium">
+              {{ artist?.diedAt ? (artist?.diedAt | dateDisplay:true) : '—' }}
+            </div>
+          </div>
+
+          <div>
+            <div class="text-sm text-gray-500">Créé par</div>
+            <div class="font-medium">
+              @if (artist?.createdBy) {
+                <a
+                  [routerLink]="['/admin/users', getUserId(artist.createdBy)]"
+                  class="text-blue-600 hover:underline">
+                  {{ artist.createdBy?.username || 'Utilisateur #' + getUserId(artist.createdBy) }}
+                </a>
+              } @else {
+                <span>—</span>
+              }
+            </div>
+          </div>
+
+          <div>
+            <div class="text-sm text-gray-500">Créé le</div>
+            <div>
+              {{ artist?.createdAt | dateDisplay:true }}
+            </div>
+          </div>
+
+          <div>
+            <div class="text-sm text-gray-500">Mis à jour le</div>
+            <div>
+              {{ artist?.updatedAt | dateDisplay:true }}
+            </div>
+          </div>
+
+          <!-- BIOGRAPHIE (pleine largeur) -->
+          <div class="col-span-2">
+            <div class="text-sm text-gray-500">Biographie</div>
+            <div class="text-gray-700 whitespace-pre-line">
+              {{ artist?.biography || '—' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ACTIVITY LOG -->
+  @if (activeTab === 'activity') {
+    <div class="space-y-4">
+      @if (!activityLogs.length) {
+        <div class="text-gray-500">Aucun journal d'activité.</div>
+      }
+
+      <div class="relative border-l border-gray-200 ml-4">
+        @for (log of activityLogs; track log.id) {
+          <div class="mb-8 ml-6">
+            <span class="absolute -left-1.5 w-3 h-3 rounded-full bg-blue-600"></span>
+
+            <div class="bg-white shadow rounded-lg p-4">
+              <div class="flex justify-between items-center">
+                <span class="font-semibold text-gray-800">{{ log.action }}</span>
+                <span class="text-xs text-gray-500">{{ log.createdAt | dateDisplay:true }}</span>
+              </div>
+
+              <p class="text-sm text-gray-600">
+                {{ log.entityClass }} #{{ log.entityId }}
+              </p>
+
+              <p class="text-sm text-gray-500">
+                Par {{ log.userConnected?.username || '—' }}
+              </p>
+
+              @if (log.oldValues || log.newValues) {
+                <div class="grid grid-cols-2 gap-4 mt-4 text-xs">
+                  @if (log.oldValues) {
+                    <div class="bg-red-50 p-3 rounded">
+                      <div class="font-semibold text-red-700 mb-1">Ancien</div>
+                      <pre>{{ log.oldValues | json }}</pre>
+                    </div>
+                  }
+
+                  @if (log.newValues) {
+                    <div class="bg-green-50 p-3 rounded">
+                      <div class="font-semibold text-green-700 mb-1">Nouveau</div>
+                      <pre>{{ log.newValues | json }}</pre>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ARTWORKS -->
+  @if (activeTab === 'artworks') {
+    <table class="w-full bg-white rounded shadow">
+      <thead class="bg-gray-50 text-sm">
+        <tr>
+          <th class="px-4 py-2 text-left">Titre</th>
+          <th class="px-4 py-2">Type</th>
+          <th class="px-4 py-2">Style</th>
+          <th class="px-4 py-2 text-right">Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (a of artworks; track a.id) {
+          <tr class="border-t">
+            <td class="px-4 py-3 font-medium">
+              <a
+                [routerLink]="['/admin/artworks', a.id]"
+                class="text-blue-600 hover:underline">
+                {{ a.title }}
+              </a>
+            </td>
+            <td class="px-4 py-2 text-center">{{ a.type }}</td>
+            <td class="px-4 py-2 text-center">{{ a.style }}</td>
+            <td class="px-4 py-2 text-right text-sm">
+              {{ a.createdAt | dateDisplay:true }}
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+              Aucune œuvre trouvée
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+</div>

@@ -1,0 +1,67 @@
+<footer class="bg-slate-900 text-slate-300 border-t border-slate-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+
+      <!-- About Section -->
+      <div class="col-span-1 md:col-span-2">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-slate-700 rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold text-xl">A</span>
+          </div>
+          <span class="text-xl font-bold text-white">ArtHub</span>
+        </div>
+        <p class="text-slate-400 max-w-md mb-6 leading-relaxed">
+          Base de donnees artistique ouverte et collaborative.
+          Contribuez a rendre l'art accessible a tous en documentant et partageant le patrimoine artistique mondial.
+        </p>
+      </div>
+
+      <!-- Navigation -->
+      <div>
+        <h3 class="text-white font-semibold mb-4">Explorer</h3>
+        <ul class="space-y-2">
+          <li>
+            <a routerLink="/artworks" class="text-slate-400 hover:text-white transition-colors">Base d'Oeuvres</a>
+          </li>
+          <li>
+            <a routerLink="/artists" class="text-slate-400 hover:text-white transition-colors">Repertoire Artistes</a>
+          </li>
+          <li>
+            <a routerLink="/galleries" class="text-slate-400 hover:text-white transition-colors">Collections</a>
+          </li>
+          <li>
+            <a routerLink="/map" class="text-slate-400 hover:text-white transition-colors">Carte du Monde</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Account -->
+      <div>
+        <h3 class="text-white font-semibold mb-4">Contribuer</h3>
+        <ul class="space-y-2">
+          <li>
+            <a routerLink="/profile" class="text-slate-400 hover:text-white transition-colors">Mon profil</a>
+          </li>
+          <li>
+            <a routerLink="/galleries/my-galleries" class="text-slate-400 hover:text-white transition-colors">Mes collections</a>
+          </li>
+          <li>
+            <a routerLink="/ratings/my-ratings" class="text-slate-400 hover:text-white transition-colors">Mes evaluations</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-slate-500 text-sm">
+        &copy; {{ currentYear }} ArtHub - Projet communautaire open source
+      </p>
+      <div class="flex gap-6 text-sm">
+        <a href="#" class="text-slate-400 hover:text-white transition-colors">A propos</a>
+        <a href="#" class="text-slate-400 hover:text-white transition-colors">Contribuer</a>
+        <a href="#" class="text-slate-400 hover:text-white transition-colors">Contact</a>
+      </div>
+    </div>
+  </div>
+</footer>

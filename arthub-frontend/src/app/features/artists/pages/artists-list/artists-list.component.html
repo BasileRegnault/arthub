@@ -1,0 +1,148 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-slate-800 to-slate-700 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-bold mb-2">Repertoire des Artistes</h1>
+      <p class="text-xl text-white/90">{{ artists()?.total || 0 }} artistes documentes dans notre base</p>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-slate-200">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Search -->
+        <app-search-bar
+          [placeholder]="'Rechercher un artiste...'"
+          [initialValue]="searchTerm()"
+          (searchChange)="onSearch($event)" />
+
+        <!-- Nationality Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Nationalite</label>
+          <select
+            [(ngModel)]="selectedNationality"
+            (ngModelChange)="onFilterChange()"
+            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500">
+            <option value="">Toutes les nationalites</option>
+            @for (nationality of nationalities; track nationality) {
+              <option [value]="nationality">{{ nationality }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-4">
+        <button
+          (click)="resetFilters()"
+          class="px-4 py-2 text-sm border border-slate-300 text-gray-700 rounded-lg hover:bg-slate-50 transition">
+          Reinitialiser les filtres
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="bg-white rounded-xl shadow-md overflow-hidden animate-pulse border border-slate-200">
+            <div class="h-48 bg-slate-200"></div>
+            <div class="p-6 space-y-3">
+              <div class="h-6 bg-slate-200 rounded w-3/4"></div>
+              <div class="h-4 bg-slate-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Artists Grid -->
+    @else if (artists()?.items && artists()!.items.length > 0) {
+      <div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          @for (artist of artists()!.items; track artist.id) {
+            <div
+              (click)="navigateToArtist(artist.id)"
+              class="bg-white rounded-xl shadow-md hover:shadow-xl transition cursor-pointer overflow-hidden group border border-slate-200 hover:border-slate-400">
+              <!-- Cover Image - Top Artwork -->
+              <div class="h-48 bg-slate-200 relative overflow-hidden">
+                @if (getArtistTopArtworkUrl(artist)) {
+                  <img
+                    [src]="getArtistTopArtworkUrl(artist)"
+                    [alt]="'Oeuvre de ' + artist.firstname + ' ' + artist.lastname"
+                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                } @else {
+                  <div class="w-full h-full bg-gradient-to-br from-slate-700 to-slate-500"></div>
+                }
+                <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition"></div>
+              </div>
+
+              <!-- Content -->
+              <div class="relative px-6 pb-6">
+                <!-- Avatar (overlapping) -->
+                <div class="absolute -top-12 left-6">
+                  <img
+                    [src]="getArtistImageUrl(artist)"
+                    [alt]="artist.firstname + ' ' + artist.lastname"
+                    class="w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg">
+                </div>
+
+                <div class="pt-14">
+                  <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-slate-600 transition">
+                    {{ artist.firstname }} {{ artist.lastname }}
+                  </h3>
+
+                  <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                    @if (artist.nationality) {
+                      <span>{{ artist.nationality }}</span>
+                    }
+                    @if (artist.bornAt) {
+                      <span>•</span>
+                      <span>{{ artist.bornAt | date:'yyyy' }}</span>
+                      @if (artist.diedAt) {
+                        <span>- {{ artist.diedAt | date:'yyyy' }}</span>
+                      }
+                    }
+                  </div>
+
+                  @if (artist.biography) {
+                    <p class="text-gray-700 text-sm line-clamp-3">
+                      {{ artist.biography }}
+                    </p>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (artists()!.lastPage && artists()!.lastPage! > 1) {
+          <div class="flex justify-center">
+            <app-pagination
+              [currentPage]="page()"
+              [totalPages]="artists()!.lastPage!"
+              (pageChange)="onPageChange($event)" />
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @else {
+      <div class="text-center py-16">
+        <svg class="w-24 h-24 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucun artiste trouve</h3>
+        <p class="text-gray-600 mb-6">Essayez de modifier vos filtres ou votre recherche</p>
+        <button
+          (click)="resetFilters()"
+          class="px-6 py-3 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 transition">
+          Reinitialiser les filtres
+        </button>
+      </div>
+    }
+  </div>
+</div>

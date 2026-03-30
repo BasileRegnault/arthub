@@ -1,0 +1,99 @@
+# ============================================
+# Docker Compose — ArtHub (API + Frontend + DB)
+# ============================================
+# Lancer avec : docker compose up -d --build
+# Arrêter avec : docker compose down
+
+services:
+
+  # ---- Base de données PostgreSQL ----
+  database:
+    image: postgres:16-alpine
+    container_name: arthub-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-arthub_db}
+      POSTGRES_USER: ${POSTGRES_USER:-arthub_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Définir POSTGRES_PASSWORD dans .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arthub_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- Backend Symfony (PHP-FPM) ----
+  api:
+    image: ghcr.io/BasileRegnault/arthub-api:latest
+    build:
+      context: ./arthub-api
+      dockerfile: Dockerfile
+    container_name: arthub-api
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_ENV: prod
+      APP_SECRET: ${APP_SECRET:?Définir APP_SECRET dans .env}
+      DATABASE_URL: "pgsql://${POSTGRES_USER:-arthub_user}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB:-arthub_db}"
+      JWT_PASSPHRASE: ${JWT_PASSPHRASE:?Définir JWT_PASSPHRASE dans .env}
+      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-'^https?://(localhost|arthub\.fr)(:[0-9]+)?$'}
+      MAILER_DSN: ${MAILER_DSN:-smtp://localhost:1025}
+    volumes:
+      - api-uploads:/app/public/uploads
+      - api-jwt:/app/config/jwt
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ---- Reverse proxy Nginx (API) ----
+  nginx:
+    image: nginx:alpine
+    container_name: arthub-nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - api-uploads:/var/www/api/public/uploads:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+
+  # ---- Frontend Angular ----
+  frontend:
+    image: ghcr.io/BasileRegnault/arthub-frontend:latest
+    build:
+      context: ./arthub-frontend
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8000}
+    container_name: arthub-frontend
+    restart: unless-stopped
+
+  # ---- Certbot (SSL) ----
+  certbot:
+    image: certbot/certbot
+    container_name: arthub-certbot
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    # Renouvellement : docker compose run --rm certbot renew
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h; done'"
+
+volumes:
+  db-data:
+  api-uploads:
+  api-jwt:
+  certbot-conf:
+  certbot-www:

@@ -1,0 +1,221 @@
+<nav class="h-full bg-gray-900 text-white p-6 flex flex-col">
+
+  <!-- TOP : titre + menu -->
+  <div class="space-y-6">
+
+    @if (!collapsed()) {
+      <h2 class="text-xl font-bold tracking-wide">
+        Admin Panel
+      </h2>
+    }
+
+    <!-- MENU -->
+    <ul class="space-y-3">
+
+      <!-- Accueil -->
+      <li>
+        <a
+          routerLink="/admin"
+          routerLinkActive="bg-gray-700"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 p-2 rounded hover:bg-gray-700 transition"
+          [title]="collapsed() ? 'Accueil' : ''"
+        >
+          <svg class="w-5 h-5 shrink-0 fill-current" viewBox="0 0 20 20">
+            <path d="M10.707 1.707a1 1 0 0 0-1.414 0L1 10h3v7a1 1 0 0 0 1 1h4v-5h2v5h4a1 1 0 0 0 1-1v-7h3L10.707 1.707Z"/>
+          </svg>
+          @if (!collapsed()) {
+            <span>Dashboard</span>
+          }
+        </a>
+      </li>
+
+      <!-- Œuvres -->
+      <li>
+        <a
+          routerLink="/admin/artworks"
+          routerLinkActive="bg-gray-700"
+          class="flex items-center gap-3 p-2 rounded hover:bg-gray-700 transition"
+          [title]="collapsed() ? 'Œuvres' : ''"
+        >
+          <svg class="w-5 h-5 shrink-0 fill-current" viewBox="0 0 20 20">
+            <path d="M4 3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H4Zm0 2h12v6l-3-2-4 3-2-1-3 2V5Z"/>
+          </svg>
+          @if (!collapsed()) {
+            <span>Œuvres</span>
+          }
+        </a>
+      </li>
+
+      <!-- Artistes -->
+      <li>
+        <a
+          routerLink="/admin/artists"
+          routerLinkActive="bg-gray-700"
+          class="flex items-center gap-3 p-2 rounded hover:bg-gray-700 transition"
+          [title]="collapsed() ? 'Artistes' : ''"
+        >
+          <svg class="w-5 h-5 shrink-0 fill-current" viewBox="0 0 20 20">
+            <path d="M10 10a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 8a7 7 0 0 1 14 0H3Z"/>
+          </svg>
+          @if (!collapsed()) {
+            <span>Artistes</span>
+          }
+        </a>
+      </li>
+
+      <!-- Galeries -->
+      <li>
+        <a
+          routerLink="/admin/galleries"
+          routerLinkActive="bg-gray-700"
+          class="flex items-center gap-3 p-2 rounded hover:bg-gray-700 transition"
+          [title]="collapsed() ? 'Galeries' : ''"
+        >
+          <svg class="w-5 h-5 shrink-0 fill-current" viewBox="0 0 20 20">
+            <path d="M2 10 10 3l8 7v7a1 1 0 0 1-1 1h-4v-5H7v5H3a1 1 0 0 1-1-1v-7Z"/>
+          </svg>
+          @if (!collapsed()) {
+            <span>Galeries</span>
+          }
+        </a>
+      </li>
+
+      <!-- Utilisateurs -->
+      <li>
+        <a
+          routerLink="/admin/users"
+          routerLinkActive="bg-gray-700"
+          class="flex items-center gap-3 p-2 rounded hover:bg-gray-700 transition"
+          [title]="collapsed() ? 'Utilisateurs' : ''"
+        >
+          <svg class="w-5 h-5 shrink-0 fill-current" viewBox="0 0 20 20">
+            <path d="M10 9a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 9a7 7 0 0 1 14 0H3Z"/>
+          </svg>
+          @if (!collapsed()) {
+            <span>Utilisateurs</span>
+          }
+        </a>
+      </li>
+
+      <!-- VALIDATIONS -->
+      <li>
+        <button
+          (click)="toggleValidationMenu()"
+          class="w-full flex justify-between items-center p-2 rounded hover:bg-gray-700 transition"
+          [title]="collapsed() ? 'Validations' : ''"
+        >
+          <span class="flex items-center gap-3">
+            <svg class="w-5 h-5 shrink-0 fill-current" viewBox="0 0 20 20">
+              <path d="M10 2 2 6v4c0 5 3.8 7.7 8 9 4.2-1.3 8-4 8-9V6l-8-4Zm-1 11-3-3 1.4-1.4L9 10.2l4.6-4.6L15 7l-6 6Z"/>
+            </svg>
+            @if (!collapsed()) {
+              <span>Validations</span>
+            }
+          </span>
+
+          <span class="flex items-center gap-2">
+            @if (validationCounter.total() > 0) {
+              <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                {{ validationCounter.total() }}
+              </span>
+            }
+
+            @if (!collapsed()) {
+              <span [class.rotate-180]="validationMenuOpen" class="transition">▾</span>
+            }
+          </span>
+        </button>
+
+        @if (validationMenuOpen && !collapsed()) {
+          <ul class="ml-4 mt-2 space-y-1">
+
+          <li>
+            <a
+              routerLink="/admin/validations/artists"
+              routerLinkActive="bg-gray-700"
+              class="flex justify-between items-center p-2 rounded hover:bg-gray-700 transition"
+            >
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                  <path d="M10 10a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 8a7 7 0 0 1 14 0H3Z"/>
+                </svg>
+                <span>Artistes</span>
+              </span>
+
+              @if (validationCounter.artistsCount() > 0) {
+                <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {{ validationCounter.artistsCount() }}
+                </span>
+              }
+            </a>
+          </li>
+
+          <li>
+            <a
+              routerLink="/admin/validations/artworks"
+              routerLinkActive="bg-gray-700"
+              class="flex justify-between items-center p-2 rounded hover:bg-gray-700 transition"
+            >
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                  <path d="M4 3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H4Zm0 2h12v6l-3-2-4 3-2-1-3 2V5Z"/>
+                </svg>
+                <span>Œuvres</span>
+              </span>
+
+              @if (validationCounter.artworksCount() > 0) {
+                <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {{ validationCounter.artworksCount() }}
+                </span>
+              }
+            </a>
+          </li>
+
+          </ul>
+        }
+      </li>
+
+    </ul>
+  </div>
+
+  <!-- BOTTOM : actions -->
+  <div class="mt-auto pt-4 border-t border-gray-800 space-y-2">
+
+    <a
+      routerLink="/admin/artworks/create"
+      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg
+             bg-blue-600 text-white text-sm font-medium
+             hover:bg-blue-700 transition"
+      [class.justify-center]="collapsed()"
+      [title]="collapsed() ? 'Ajouter une œuvre' : ''"
+    >
+      <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      @if (!collapsed()) {
+        <span>Ajouter une œuvre</span>
+      }
+    </a>
+
+    <a
+      routerLink="/admin/artists/create"
+      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg
+             bg-green-600 text-white text-sm font-medium
+             hover:bg-green-700 transition"
+      [class.justify-center]="collapsed()"
+      [title]="collapsed() ? 'Ajouter un artiste' : ''"
+    >
+      <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 8v6m3-3h-6" />
+      </svg>
+      @if (!collapsed()) {
+        <span>Ajouter un artiste</span>
+      }
+    </a>
+
+  </div>
+
+</nav>

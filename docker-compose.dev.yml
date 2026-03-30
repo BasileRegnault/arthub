@@ -1,0 +1,104 @@
+# ============================================
+# Docker Compose — ArtHub (Développement local)
+# ============================================
+# Lancer avec : docker compose -f docker-compose.dev.yml up -d
+#
+# Monte les fichiers sources en volume → hot reload actif.
+#
+# Premier lancement :
+#   docker compose -f docker-compose.dev.yml exec php composer install
+#   docker compose -f docker-compose.dev.yml exec php php bin/console lexik:jwt:generate-keypair
+#   docker compose -f docker-compose.dev.yml exec php php bin/console doctrine:migrations:migrate --no-interaction
+#
+# Accès :
+#   Frontend  → http://localhost:4200
+#   API       → http://localhost:8000
+#   Emails    → http://localhost:8025 (Mailhog)
+#   PostgreSQL → localhost:5432
+
+services:
+
+  # ---- Base de données PostgreSQL ----
+  database:
+    image: postgres:16-alpine
+    container_name: arthub-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: arthub_db
+      POSTGRES_USER: arthub_user
+      POSTGRES_PASSWORD: arthub_dev_password
+    volumes:
+      - db-data-dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arthub_user"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---- Mailhog (capture d'emails en dev) ----
+  mailhog:
+    image: mailhog/mailhog
+    container_name: arthub-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Interface web
+
+  # ---- Backend PHP-FPM (Symfony) ----
+  # Le code est monté en volume → les changements sont immédiats.
+  php:
+    build:
+      context: ./arthub-api
+      dockerfile: Dockerfile.dev
+    container_name: arthub-php-dev
+    restart: unless-stopped
+    volumes:
+      - ./arthub-api:/app
+      - composer_cache:/root/.composer
+    environment:
+      APP_ENV: dev
+      APP_SECRET: dev-secret-change-me
+      DATABASE_URL: "pgsql://arthub_user:arthub_dev_password@database:5432/arthub_db?serverVersion=16"
+      JWT_SECRET_KEY: /app/config/jwt/private.pem
+      JWT_PUBLIC_KEY: /app/config/jwt/public.pem
+      JWT_PASSPHRASE: dev-jwt-passphrase
+      CORS_ALLOW_ORIGIN: "^https?://(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$$"
+      MAILER_DSN: "smtp://mailhog:1025"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # ---- Nginx (sert l'API Symfony sur :8000) ----
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: arthub-nginx-dev
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./arthub-api:/app:ro
+      - ./arthub-api/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+
+  # ---- Frontend Angular (ng serve avec hot reload) ----
+  # --poll=2000 : nécessaire sur Windows/WSL pour détecter les changements de fichiers.
+  frontend:
+    image: node:20-alpine
+    container_name: arthub-frontend-dev
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npx ng serve --host 0.0.0.0 --poll=2000 --proxy-config proxy.conf.json"
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./arthub-frontend:/app
+      - node_modules_dev:/app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+
+volumes:
+  db-data-dev:
+  composer_cache:
+  node_modules_dev:

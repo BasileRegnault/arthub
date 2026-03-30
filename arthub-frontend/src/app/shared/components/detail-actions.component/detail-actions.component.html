@@ -1,0 +1,39 @@
+<div class="flex items-center gap-2">
+  <!-- PREVISUALISATION -->
+  <button
+    *ngIf="showPreview"
+    type="button"
+    [class]="previewClass"
+    (click)="onPreview()"
+    [disabled]="disabled">
+    {{ previewLabel }}
+  </button>
+
+  <!-- MODIFIER -->
+  <button
+    *ngIf="showEdit"
+    type="button"
+    [class]="editClass"
+    (click)="onEdit()"
+    [disabled]="disabled">
+    {{ editLabel }}
+  </button>
+
+  <!-- SUPPRIMER -->
+  <button
+    *ngIf="showDelete"
+    type="button"
+    [class]="deleteClass"
+    (click)="onDelete()"
+    [disabled]="disabled">
+    {{ deleteLabel }}
+  </button>
+</div>
+
+<app-confirm-modal
+  [isOpen]="confirmOpen()"
+  [title]="deleteTitle"
+  [itemTitle]="itemTitle"
+  (onConfirm)="handleConfirm()"
+  (onCancel)="handleCancel()">
+</app-confirm-modal>

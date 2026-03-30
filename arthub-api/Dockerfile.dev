@@ -1,0 +1,34 @@
+# ============================================
+# Dockerfile.dev — ArtHub API (développement)
+# Le code est monté en volume, pas copié dans l'image.
+# ============================================
+FROM php:8.3-fpm-alpine
+
+RUN apk add --no-cache \
+    postgresql-dev \
+    icu-dev \
+    libzip-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_pgsql \
+        intl \
+        zip \
+        gd
+
+# PHP config dev (erreurs visibles, mémoire illimitée pour CLI et FPM)
+RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "display_startup_errors=On" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "upload_max_filesize=15M" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "post_max_size=20M" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "memory_limit=-1" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "date.timezone=Europe/Paris" >> /usr/local/etc/php/conf.d/dev.ini
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+CMD ["php-fpm"]

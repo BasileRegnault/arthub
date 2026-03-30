@@ -1,0 +1,88 @@
+<div class="bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 space-y-4">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold text-gray-700">Filtres</h3>
+    <span class="text-sm text-gray-400 hidden md:inline">Recherche avancée</span>
+  </div>
+
+  <!-- Formulaire -->
+  <form [formGroup]="form"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+
+    <!-- Prénom -->
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium text-gray-700">Prénom</label>
+      <input
+        type="text"
+        formControlName="firstname"
+        placeholder="Prénom"
+        class="border border-gray-300 rounded-lg px-3 py-2
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+      />
+    </div>
+
+    <!-- Nom -->
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium text-gray-700">Nom</label>
+      <input
+        type="text"
+        formControlName="lastname"
+        placeholder="Nom"
+        class="border border-gray-300 rounded-lg px-3 py-2
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+      />
+    </div>
+
+    <!-- Nationalité -->
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium text-gray-700">Nationalité</label>
+      <input
+        type="text"
+        formControlName="nationality"
+        placeholder="Nationalité"
+        class="border border-gray-300 rounded-lg px-3 py-2
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+      />
+    </div>
+
+    <!-- Créé par (autocomplete) -->
+    <div class="flex flex-col gap-1">
+      <app-user-autocomplete formControlName="createdBy"></app-user-autocomplete>
+    </div>
+
+    <app-date-range-input label="Né(e) entre" [formGroup]="form" afterControl="bornAtAfter" beforeControl="bornAtBefore" />
+    <app-date-range-input label="Décédé(e) entre" [formGroup]="form" afterControl="diedAtAfter" beforeControl="diedAtBefore" />
+    <app-date-range-input label="Créé entre" [formGroup]="form" afterControl="createdAtAfter" beforeControl="createdAtBefore" />
+    <app-date-range-input label="Modifié entre" [formGroup]="form" afterControl="updatedAtAfter" beforeControl="updatedAtBefore" />
+
+    <div class="md:col-span-4">
+      <app-boolean-toggle
+        label="Validation"
+        [value]="form.value.isConfirmCreate!"
+        trueLabel="Confirmé"
+        falseLabel="Non confirmé"
+        (valueChange)="setIsConfirmCreate($event)" />
+    </div>
+
+
+  </form>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-3 pt-3 border-t">
+    <button type="button"
+            (click)="resetFilters()"
+            class="px-4 py-2 rounded-lg border text-gray-600
+                   hover:bg-gray-50 transition">
+      Réinitialiser
+    </button>
+
+    <button type="button"
+            (click)="submit()"
+            class="px-5 py-2 rounded-lg bg-blue-600 text-white
+                   hover:bg-blue-700 transition">
+      Rechercher
+    </button>
+  </div>
+
+</div>

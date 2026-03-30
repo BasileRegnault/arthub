@@ -1,0 +1,161 @@
+<div class="space-y-6">
+
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-semibold text-gray-800">Historique des validations des oeuvres</h2>
+  </div>
+
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg mt-6">
+    <table class="min-w-full divide-y divide-gray-200">
+
+      <thead class="bg-gray-50 sticky top-0 z-10">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Image</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Oeuvre</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Artiste</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Cree par</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Statut</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Valide par</th>
+
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700 w-[260px]">
+            Raison
+          </th>
+
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Date action</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
+        </tr>
+      </thead>
+
+      @if (!loading()) {
+        <tbody class="bg-white divide-y divide-gray-200">
+          @for (v of rowsWithImages(); track v.id) {
+            <tr class="hover:bg-gray-50 transition">
+
+              <td class="px-4 py-3">
+                <img [src]="v.imageUrl" class="w-12 h-12 rounded object-cover" />
+              </td>
+
+              <td class="px-4 py-3">
+                <div class="font-medium">{{ v.subject?.title }}</div>
+                <div class="text-xs text-gray-500">#{{ v.subjectId }}</div>
+              </td>
+
+              <td class="px-4 py-3">
+                @if (v.subject?.artist; as a) {
+                  <span class="font-medium">{{ a.firstname }} {{ a.lastname }}</span>
+                  @if (a.id) {
+                    <div class="text-xs text-gray-500">Artiste #{{ a.id }}</div>
+                  }
+                } @else {
+                  <span>—</span>
+                }
+              </td>
+
+              <td class="px-4 py-3">
+                @if (getUserId(v.submittedBy) !== '—') {
+                  <a
+                    [routerLink]="['/admin/users', getUserId(v.submittedBy)]"
+                    class="text-blue-600 hover:underline">
+                    {{ getUsername(v.submittedBy) }}
+                  </a>
+                } @else {
+                  <span>—</span>
+                }
+              </td>
+
+              <td class="px-4 py-3">
+                <span class="px-2 py-1 rounded-full text-xs font-semibold" [ngClass]="statusClass(v.status)">
+                  {{ statusLabel(v.status) }}
+                </span>
+              </td>
+
+              <td class="px-4 py-3">
+                @if (getUserId(v.decidedBy) !== '—') {
+                  <a
+                    [routerLink]="['/admin/users', getUserId(v.decidedBy)]"
+                    class="text-blue-600 hover:underline">
+                    {{ getUsername(v.decidedBy) }}
+                  </a>
+                } @else {
+                  <span>—</span>
+                }
+              </td>
+
+              <!-- RAISON (clamp + expand) -->
+              <td class="px-4 py-3 max-w-sm">
+                <div
+                  class="text-gray-700 cursor-pointer select-none"
+                  [ngClass]="{
+                    'line-clamp-2': !expandedReason().has(v.id),
+                    'whitespace-pre-wrap': expandedReason().has(v.id)
+                  }"
+                  (click)="toggleReason(v.id)"
+                  [title]="v.reason || ''"
+                >
+                  {{ v.reason || '—' }}
+                </div>
+              </td>
+
+              <td class="px-4 py-3">{{ v.createdAt | dateDisplay:true }}</td>
+
+              <td class="px-4 py-3">
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-50 hover:bg-yellow-100 text-yellow-600 transition"
+                  (click)="onViewDetails(v.subjectId)"
+                  title="Voir details"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 18V9m4 9v-6m4 6V4"/>
+                  </svg>
+                </button>
+              </td>
+
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9" class="px-6 py-6 text-center text-gray-500">
+                Aucune validation.
+              </td>
+            </tr>
+          }
+        </tbody>
+      } @else {
+        <tbody>
+          <tr>
+            <td colspan="9" class="px-6 py-6 text-center text-gray-500">
+              Chargement...
+            </td>
+          </tr>
+        </tbody>
+      }
+
+    </table>
+  </div>
+
+  <div class="flex justify-center gap-4 mt-4">
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 transition"
+      [disabled]="page() <= 1 || loading()"
+      (click)="setPage(page() - 1)">
+      <- Precedent
+    </button>
+
+    <span class="px-2 py-1 text-gray-700 font-medium">Page {{ page() }}</span>
+
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 transition"
+      [disabled]="!hasNextPage() || loading()"
+      (click)="setPage(page() + 1)">
+      Suivant ->
+    </button>
+  </div>
+
+  <div class="flex gap-3 mt-4">
+    <span class="px-3 py-1 bg-gray-100 rounded text-gray-800">
+      Total : {{ validations()?.total || 0 }}
+    </span>
+    <span class="px-3 py-1 bg-blue-100 rounded text-blue-800">
+      Sur cette page : {{ validations()?.items?.length || 0 }}
+    </span>
+  </div>
+
+</div>

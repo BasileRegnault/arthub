@@ -1,0 +1,242 @@
+<div class="space-y-6">
+
+  <!-- Header + Add button -->
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-semibold text-gray-800">Liste des galeries</h2>
+    <a
+      routerLink="/admin/galleries/new"
+      class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+      + Ajouter une galerie
+    </a>
+  </div>
+
+  <!-- Filtre -->
+  <app-gallery-filter
+    [initialFilters]="filters"
+    (search)="onSearch($event)"
+    (reset)="onResetFilters()">
+  </app-gallery-filter>
+
+  <!-- Tableau -->
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg mt-6">
+    <table class="min-w-full divide-y divide-gray-200">
+
+      <!-- Header -->
+      <thead class="bg-gray-50 sticky top-0 z-10">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Image</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer">
+            Nom
+          </th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Description
+          </th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-700">
+            Public
+          </th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Vues
+          </th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Œuvres
+          </th>
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-700">
+            Actions
+          </th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Créé par
+          </th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Créé le
+          </th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Modifié le
+          </th>
+        </tr>
+      </thead>
+
+      <!-- Corps -->
+      @if (!loading()) {
+        <tbody class="bg-white divide-y divide-gray-200">
+          @for (gallery of galleriesWithImages(); track gallery.id) {
+            <tr class="hover:bg-gray-50 transition">
+
+              <!-- Image -->
+              <td class="px-4 py-3">
+                @if (gallery.imageUrl) {
+                  <img
+                    [src]="gallery.imageUrl"
+                    class="w-16 h-16 rounded object-cover" />
+                } @else {
+                  <span class="text-gray-400">—</span>
+                }
+              </td>
+
+              <!-- Nom -->
+              <td class="px-4 py-3 font-medium text-gray-800">
+                {{ gallery.name }}
+              </td>
+
+              <!-- Description -->
+              <td class="px-4 py-3 text-gray-600 truncate max-w-xs">
+                {{ gallery.description || '—' }}
+              </td>
+
+              <!-- Public -->
+              <td class="px-4 py-3 text-center">
+                <span
+                  class="inline-block w-4 h-4 rounded-full"
+                  [class.bg-green-500]="gallery.isPublic"
+                  [class.bg-red-500]="!gallery.isPublic">
+                </span>
+              </td>
+
+              <!-- Vues -->
+              <td class="px-4 py-3 text-gray-600">
+                {{ gallery.views ?? 0 }}
+              </td>
+
+              <!-- Œuvres -->
+              <td class="px-4 py-3 text-gray-600">
+                {{ gallery.artworks?.length ?? 0 }}
+              </td>
+
+              <!-- Actions -->
+              <td class="px-4 py-3 text-center flex justify-center gap-2">
+
+                <!-- Edit -->
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 transition"
+                  (click)="onEdit(gallery.id)"
+                  title="Éditer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                       viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M11 4H4v7l10 10 7-7L11 4z" />
+                  </svg>
+                </button>
+
+                <!-- Delete -->
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 text-red-600 transition"
+                  (click)="onDelete(gallery.id, gallery.name)"
+                  title="Supprimer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                       viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                <!-- Preview -->
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-green-50 hover:bg-green-100 text-green-600 transition"
+                  (click)="onPreview(gallery.id)"
+                  title="Aperçu">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                       viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
+                             -1.274 4.057-5.064 7-9.542 7
+                             -4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+
+                <!-- Details -->
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-50 hover:bg-yellow-100 text-yellow-600 transition"
+                  (click)="onViewDetails(gallery.id)"
+                  title="Voir détails">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                       viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 3v18h18M7 18V9m4 9v-6m4 6V4"/>
+                  </svg>
+                </button>
+
+              </td>
+
+              <td class="px-4 py-3 text-gray-600">
+                @if (gallery.createdBy) {
+                  <a
+                    [routerLink]="['/admin/users', gallery.createdBy | resourceId]"
+                    class="text-blue-600 hover:underline">
+                    {{ gallery.createdBy | resourceLabel:'username':'User' }}
+                  </a>
+                } @else {
+                  <span>—</span>
+                }
+              </td>
+
+              <!-- Dates -->
+              <td class="px-4 py-3 text-gray-500">
+                {{ gallery.createdAt | dateDisplay:true }}
+              </td>
+              <td class="px-4 py-3 text-gray-500">
+                {{ gallery.updatedAt | dateDisplay:true }}
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="10" class="px-6 py-6 text-center text-gray-500">
+                Aucune galerie trouvée.
+              </td>
+            </tr>
+          }
+        </tbody>
+      } @else {
+        <!-- Loading -->
+        <tbody>
+          <tr>
+            <td colspan="10" class="px-6 py-6 text-center text-gray-500">
+              Chargement...
+            </td>
+          </tr>
+        </tbody>
+      }
+
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="flex justify-center gap-4 mt-4">
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 transition"
+      [disabled]="page() <= 1"
+      (click)="setPage(page() - 1)">
+      ← Précédent
+    </button>
+
+    <span class="px-2 py-1 text-gray-700 font-medium">
+      Page {{ page() }}
+    </span>
+
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 transition"
+      [disabled]="!hasNextPage()"
+      (click)="setPage(page() + 1)">
+      Suivant →
+    </button>
+  </div>
+
+</div>
+
+<!-- Confirm Modal -->
+<app-confirm-modal
+  [isOpen]="confirmModalOpen()"
+  title="Supprimer la galerie"
+  [itemTitle]="selectedGalleryName"
+  (onConfirm)="handleConfirmDelete()"
+  (onCancel)="handleCancelDelete()">
+</app-confirm-modal>
+
+<!-- Modal entités liées -->
+<app-related-entities-modal
+  [isOpen]="relatedEntitiesModalOpen"
+  [title]="relatedEntitiesTitle"
+  [message]="relatedEntitiesMessage"
+  [relatedData]="relatedEntitiesData"
+  (onClose)="closeRelatedEntitiesModal()">
+</app-related-entities-modal>

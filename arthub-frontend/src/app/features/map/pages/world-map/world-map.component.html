@@ -1,0 +1,248 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-slate-800 to-slate-700 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-bold mb-2">Carte des Oeuvres</h1>
+      <p class="text-xl text-white/90">Explorez la repartition geographique du patrimoine artistique mondial</p>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stats Summary -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-slate-200">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center">
+          <div class="text-4xl font-bold text-slate-800 mb-1">{{ totalArtworks() }}</div>
+          <div class="text-slate-600">Oeuvres documentees</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-slate-800 mb-1">{{ countriesWithArt() }}</div>
+          <div class="text-slate-600">Pays representes</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-slate-800 mb-1">{{ countries.length }}</div>
+          <div class="text-slate-600">Pays indexes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        @for (i of [1,2,3,4,5,6,7,8,9,10,11,12]; track i) {
+          <div class="bg-white rounded-xl shadow-md p-4 animate-pulse border border-slate-200">
+            <div class="h-6 bg-slate-200 rounded w-3/4 mb-2"></div>
+            <div class="h-8 bg-slate-200 rounded w-1/2"></div>
+          </div>
+        }
+      </div>
+    }
+
+    @else {
+      <!-- Legend -->
+      <div class="bg-white rounded-xl shadow-md p-4 mb-6 border border-slate-200">
+        <div class="flex items-center justify-center gap-6 flex-wrap">
+          <span class="text-sm text-slate-600 font-medium">Densite d'oeuvres:</span>
+          <div class="flex items-center gap-1">
+            <div class="w-6 h-4 rounded bg-slate-200"></div>
+            <span class="text-xs text-slate-500">0</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <div class="w-6 h-4 rounded bg-slate-300"></div>
+            <span class="text-xs text-slate-500">Faible</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <div class="w-6 h-4 rounded bg-slate-400"></div>
+            <span class="text-xs text-slate-500">Moyen</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <div class="w-6 h-4 rounded bg-slate-500"></div>
+            <span class="text-xs text-slate-500">Eleve</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <div class="w-6 h-4 rounded bg-slate-700"></div>
+            <span class="text-xs text-slate-500">Tres eleve</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Countries by Region -->
+      <div class="space-y-8">
+        <!-- Europe -->
+        <div>
+          <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Europe
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            @for (country of countryData(); track country.code) {
+              @if (['FR', 'IT', 'ES', 'DE', 'GB', 'NL', 'BE', 'AT', 'CH', 'PT', 'GR', 'PL', 'SE', 'NO', 'DK', 'FI', 'IE', 'CZ', 'HU', 'RO', 'UA'].includes(country.code)) {
+                <button
+                  (click)="onCountryClick(country.code)"
+                  (mouseenter)="onCountryHover(country.code)"
+                  (mouseleave)="onCountryHover(null)"
+                  class="bg-white rounded-xl shadow-md p-4 border-2 transition-all duration-200 hover:shadow-lg hover:scale-105 text-left"
+                  [style.borderColor]="getCountryColor(country.code)"
+                  [class.opacity-50]="country.count === 0">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div
+                      class="w-4 h-4 rounded-full"
+                      [style.backgroundColor]="getCountryColor(country.code)">
+                    </div>
+                    <span class="font-semibold text-slate-800 text-sm truncate">{{ country.name }}</span>
+                  </div>
+                  <div class="text-2xl font-bold" [class.text-slate-800]="country.count > 0" [class.text-slate-400]="country.count === 0">
+                    {{ country.count }}
+                  </div>
+                  <div class="text-xs text-slate-500">oeuvre{{ country.count !== 1 ? 's' : '' }}</div>
+                </button>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Americas -->
+        <div>
+          <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Ameriques
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            @for (country of countryData(); track country.code) {
+              @if (['US', 'CA', 'MX', 'BR', 'AR'].includes(country.code)) {
+                <button
+                  (click)="onCountryClick(country.code)"
+                  (mouseenter)="onCountryHover(country.code)"
+                  (mouseleave)="onCountryHover(null)"
+                  class="bg-white rounded-xl shadow-md p-4 border-2 transition-all duration-200 hover:shadow-lg hover:scale-105 text-left"
+                  [style.borderColor]="getCountryColor(country.code)"
+                  [class.opacity-50]="country.count === 0">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div
+                      class="w-4 h-4 rounded-full"
+                      [style.backgroundColor]="getCountryColor(country.code)">
+                    </div>
+                    <span class="font-semibold text-slate-800 text-sm truncate">{{ country.name }}</span>
+                  </div>
+                  <div class="text-2xl font-bold" [class.text-slate-800]="country.count > 0" [class.text-slate-400]="country.count === 0">
+                    {{ country.count }}
+                  </div>
+                  <div class="text-xs text-slate-500">oeuvre{{ country.count !== 1 ? 's' : '' }}</div>
+                </button>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Asia -->
+        <div>
+          <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Asie
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            @for (country of countryData(); track country.code) {
+              @if (['JP', 'CN', 'RU', 'IN', 'KR', 'TR'].includes(country.code)) {
+                <button
+                  (click)="onCountryClick(country.code)"
+                  (mouseenter)="onCountryHover(country.code)"
+                  (mouseleave)="onCountryHover(null)"
+                  class="bg-white rounded-xl shadow-md p-4 border-2 transition-all duration-200 hover:shadow-lg hover:scale-105 text-left"
+                  [style.borderColor]="getCountryColor(country.code)"
+                  [class.opacity-50]="country.count === 0">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div
+                      class="w-4 h-4 rounded-full"
+                      [style.backgroundColor]="getCountryColor(country.code)">
+                    </div>
+                    <span class="font-semibold text-slate-800 text-sm truncate">{{ country.name }}</span>
+                  </div>
+                  <div class="text-2xl font-bold" [class.text-slate-800]="country.count > 0" [class.text-slate-400]="country.count === 0">
+                    {{ country.count }}
+                  </div>
+                  <div class="text-xs text-slate-500">oeuvre{{ country.count !== 1 ? 's' : '' }}</div>
+                </button>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Africa & Oceania -->
+        <div>
+          <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Afrique & Oceanie
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            @for (country of countryData(); track country.code) {
+              @if (['EG', 'MA', 'ZA', 'AU', 'NZ'].includes(country.code)) {
+                <button
+                  (click)="onCountryClick(country.code)"
+                  (mouseenter)="onCountryHover(country.code)"
+                  (mouseleave)="onCountryHover(null)"
+                  class="bg-white rounded-xl shadow-md p-4 border-2 transition-all duration-200 hover:shadow-lg hover:scale-105 text-left"
+                  [style.borderColor]="getCountryColor(country.code)"
+                  [class.opacity-50]="country.count === 0">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div
+                      class="w-4 h-4 rounded-full"
+                      [style.backgroundColor]="getCountryColor(country.code)">
+                    </div>
+                    <span class="font-semibold text-slate-800 text-sm truncate">{{ country.name }}</span>
+                  </div>
+                  <div class="text-2xl font-bold" [class.text-slate-800]="country.count > 0" [class.text-slate-400]="country.count === 0">
+                    {{ country.count }}
+                  </div>
+                  <div class="text-xs text-slate-500">oeuvre{{ country.count !== 1 ? 's' : '' }}</div>
+                </button>
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Countries Ranking -->
+      <div class="mt-8 bg-white rounded-xl shadow-md p-6 border border-slate-200">
+        <h2 class="text-xl font-bold text-slate-800 mb-4">Classement par nombre d'oeuvres</h2>
+        <div class="space-y-3">
+          @for (country of countryData().slice(0, 10); track country.code; let i = $index) {
+            @if (country.count > 0) {
+              <button
+                (click)="onCountryClick(country.code)"
+                class="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 transition group">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  [class.bg-yellow-500]="i === 0"
+                  [class.bg-slate-400]="i === 1"
+                  [class.bg-amber-600]="i === 2"
+                  [class.bg-slate-300]="i > 2"
+                  [class.text-slate-700]="i > 2">
+                  {{ i + 1 }}
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <span class="font-semibold text-slate-800 group-hover:text-slate-600">{{ country.name }}</span>
+                    <span class="text-lg font-bold text-slate-800">{{ country.count }}</span>
+                  </div>
+                  <div class="mt-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      class="h-full bg-slate-600 rounded-full transition-all duration-500"
+                      [style.width.%]="(country.count / (countryData()[0]?.count || 1)) * 100">
+                    </div>
+                  </div>
+                </div>
+              </button>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

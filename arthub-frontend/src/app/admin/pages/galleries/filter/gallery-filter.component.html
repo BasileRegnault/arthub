@@ -1,0 +1,67 @@
+<div class="bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 space-y-4">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold text-gray-700">Filtres</h3>
+    <span class="text-sm text-gray-400 hidden md:inline">Recherche avancée</span>
+  </div>
+
+  <!-- Formulaire -->
+  <form [formGroup]="form"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+
+    <!-- Nom -->
+     
+    <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-gray-700">
+            Nom de la galerie
+        </label>
+        <input
+            type="text"
+            formControlName="name"
+            placeholder="Nom de la galerie"
+            class="border border-gray-300 rounded-lg px-3 py-2
+                focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+        />
+    </div>
+
+    <app-user-autocomplete formControlName="createdBy"></app-user-autocomplete>
+
+    <!-- Created at -->
+    <app-date-range-input label="Créé entre" [formGroup]="form" afterControl="createdAtAfter" beforeControl="createdAtBefore" />
+
+    <!-- Updated at -->
+    <app-date-range-input label="Modifié entre" [formGroup]="form" afterControl="updatedAtAfter" beforeControl="updatedAtBefore" />
+
+    <!-- Public toggle -->
+    <div class="md:col-span-4">
+      <app-boolean-toggle
+        label="Visibilité"
+        [value]="form.value.isPublic!"
+        trueLabel="Public"
+        falseLabel="Privé"
+        (valueChange)="setIsPublic($event)" />
+    </div>
+
+  </form>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-3 pt-3 border-t">
+    <button
+      type="button"
+      (click)="resetFilters()"
+      class="px-4 py-2 rounded-lg border
+             text-gray-600 hover:bg-gray-50 transition">
+      Réinitialiser
+    </button>
+
+    <button
+      type="button"
+      (click)="submit()"
+      class="px-5 py-2 rounded-lg bg-blue-600
+             text-white hover:bg-blue-700 transition">
+      Rechercher
+    </button>
+  </div>
+
+</div>

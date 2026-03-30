@@ -1,0 +1,76 @@
+<header class="h-16 bg-white shadow flex items-center justify-between px-6">
+
+  <div class="flex items-center gap-3">
+
+    <!-- Bouton retour -->
+    <button
+      class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition"
+      (click)="goBack()"
+      title="Retour"
+    >
+      <!-- Icône flèche gauche -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    <!-- Bouton toggle sidebar -->
+    <button
+      class="px-3 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+      (click)="toggleSidebar.emit()"
+      [title]="collapsed() ? 'Ouvrir le menu' : 'Réduire le menu'"
+    >
+      {{ collapsed() ? 'Ouvrir' : 'Réduire' }}
+    </button>
+
+    <nav class="text-sm text-gray-500">
+      @if (breadcrumbService.breadcrumbs$ | async; as crumbs) {
+        @for (c of crumbs; track c.url; let last = $last) {
+          @if (!last) {
+            <a [routerLink]="c.url" class="hover:underline text-gray-600">
+              {{ c.label }}
+            </a>
+          }
+          @if (last) {
+            <span class="text-gray-700 font-medium">
+              {{ c.label }}
+            </span>
+          }
+          @if (!last) {
+            <span class="mx-2 text-gray-400">›</span>
+          }
+        }
+      }
+    </nav>
+
+  </div>
+  
+
+  <div class="flex items-center space-x-4">
+    @if (auth.isAuthenticated()) {
+      <span class="text-gray-600">
+        Utilisateur connecté : {{ auth.currentUser?.username }}
+      </span>
+      <button
+        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+        (click)="logout()"
+      >
+        Déconnexion
+      </button>
+    } @else {
+      <button
+        class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+        [routerLink]="['/auth/login']"
+      >
+        Connexion
+      </button>
+      <button
+        class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+        [routerLink]="['/auth/register']"
+      >
+        Inscription
+      </button>
+    }
+  </div>
+</header>

@@ -1,0 +1,49 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Back Button -->
+    <app-back-button
+      label="Retour au profil"
+      route="/profile" />
+
+    <!-- Header -->
+    <div class="bg-white rounded-xl shadow-md p-8 mb-6">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Éditer Mon Profil</h1>
+      <p class="text-gray-600">Mettez à jour vos informations personnelles</p>
+    </div>
+
+    <!-- Form -->
+    <form (ngSubmit)="submit()" [formGroup]="form" class="bg-white rounded-xl shadow-md p-8 space-y-6">
+      <!-- Username -->
+      <app-form-field
+        label="Nom d'utilisateur"
+        [control]="form.controls.username"
+        placeholder="Votre nom d'utilisateur">
+      </app-form-field>
+
+      <!-- Email -->
+      <app-form-field
+        label="Email"
+        [control]="form.controls.email"
+        placeholder="votre.email@exemple.com">
+      </app-form-field>
+
+      <!-- Actions -->
+      <div class="flex gap-4 pt-6 border-t border-gray-200">
+        <button
+          type="submit"
+          [disabled]="submitting()"
+          class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ submitting() ? 'Enregistrement...' : 'Enregistrer les Modifications' }}
+        </button>
+
+        <button
+          type="button"
+          (click)="cancel()"
+          [disabled]="submitting()"
+          class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition disabled:opacity-50">
+          Annuler
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

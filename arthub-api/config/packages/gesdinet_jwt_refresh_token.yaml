@@ -1,0 +1,5 @@
+gesdinet_jwt_refresh_token:
+    ttl: 604800 # 7 jours
+    firewall: main
+    user_provider: App\Repository\UserRepository
+    refresh_token_class: Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken

@@ -1,0 +1,197 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-semibold text-gray-800">Liste des utilisateurs</h2>
+  </div>
+
+  <!-- Filtre -->
+  <app-user-filter
+    [initialFilters]="filters"
+    (search)="onSearch($event)"
+    (reset)="onResetFilters()">
+  </app-user-filter>
+
+  <!-- Tableau -->
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg mt-6">
+    <table class="min-w-full divide-y divide-gray-200">
+
+      <!-- Header -->
+      <thead class="bg-gray-50 sticky top-0 z-10">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer"
+              (click)="sortBy('profilePicture')">
+            Photo
+          </th>
+
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer"
+              (click)="sortBy('username')">
+            Nom d'utilisateur
+            @if (sortColumn === 'username') {
+              <span>{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            }
+          </th>
+
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer"
+              (click)="sortBy('email')">
+            Email
+            @if (sortColumn === 'email') {
+              <span>{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            }
+          </th>
+
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Rôle
+          </th>
+
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-700">
+            Suspension
+          </th>
+
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Créé le
+          </th>
+
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">
+            Mis à jour le
+          </th>
+
+          <th class="px-4 py-3 text-center text-sm font-medium text-gray-700">
+            Actions
+          </th>
+        </tr>
+      </thead>
+
+      <!-- Corps -->
+      @if (!loading()) {
+        <tbody class="bg-white divide-y divide-gray-200">
+          @for (user of usersWithProfilePicture(); track user.id) {
+            <tr class="hover:bg-gray-50 transition">
+
+              <!-- Photo -->
+              <td class="px-4 py-3">
+                @if (user.profilePictureUrl) {
+                  <img
+                    [src]="user.profilePictureUrl"
+                    class="w-12 h-12 rounded-full object-cover"
+                  />
+                } @else {
+                  <span class="text-gray-400">—</span>
+                }
+              </td>
+
+              <!-- Infos principales -->
+              <td class="px-4 py-3 font-medium text-gray-800">{{ user.username }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ user.email }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ user.roles.join(', ') }}</td>
+
+              <!-- Suspension (pastille comme dans artworks) -->
+              <td class="px-4 py-3 text-center">
+                <span
+                  class="inline-block w-4 h-4 rounded-full"
+                  [class.bg-red-500]="user.isSuspended"
+                  [class.bg-green-500]="!user.isSuspended">
+                </span>
+              </td>
+
+              <!-- Dates -->
+              <td class="px-4 py-3 text-gray-500">{{ user.createdAt | dateDisplay:true }}</td>
+              <td class="px-4 py-3 text-gray-500">{{ user.updatedAt | dateDisplay:true }}</td>
+
+              <!-- Actions (même style de boutons ronds + SVG) -->
+              <td class="px-4 py-3 text-center">
+                <div class="flex justify-center gap-2">
+
+                  <!-- Suspend / Reactivate -->
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-purple-50 hover:bg-purple-100 text-purple-600 transition"
+                    (click)="onToggleSuspend(user.id, user.username, user.isSuspended)"
+                    [title]="user.isSuspended ? 'Réactiver' : 'Suspendre'">
+                    @if (!user.isSuspended) {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <!-- lock closed -->
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 11V7a4 4 0 00-8 0v4m1 0h6m8 0v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-8m12 0H5" />
+                      </svg>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <!-- lock open -->
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11V7a4 4 0 10-8 0v4m1 0h10v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-8h2" />
+                      </svg>
+                    }
+                  </button>
+
+                  <!-- Supprimer -->
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 text-red-600 transition"
+                    (click)="onDelete(user.id, user.username)"
+                    title="Supprimer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
+                  <!-- Voir détails -->
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-50 hover:bg-yellow-100 text-yellow-600 transition"
+                    (click)="onViewDetails(user.id)"
+                    title="Voir détails">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 18V9m4 9v-6m4 6V4"/>
+                    </svg>
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="px-6 py-6 text-center text-gray-500">Aucun utilisateur trouvé</td>
+            </tr>
+          }
+        </tbody>
+      } @else {
+        <!-- Loading -->
+        <tbody>
+          <tr>
+            <td colspan="8" class="px-6 py-6 text-center text-gray-500">Chargement...</td>
+          </tr>
+        </tbody>
+      }
+
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="mt-4">
+    <app-pagination
+      [currentPage]="page()"
+      [totalPages]="users()?.lastPage || 1"
+      (pageChange)="setPage($event)" />
+  </div>
+
+  <!-- Totaux -->
+  <div class="flex gap-3 mt-4">
+    <span class="px-3 py-1 bg-gray-100 rounded text-gray-700">Total : {{ users()?.total || 0 }}</span>
+    <span class="px-3 py-1 bg-blue-100 rounded text-blue-700">Sur cette page : {{ users()?.items?.length || 0 }}</span>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <app-confirm-modal
+    [isOpen]="confirmModalOpen() && confirmAction === 'delete'"
+    title="Supprimer l'utilisateur"
+    [itemTitle]="selectedUserName"
+    (onConfirm)="handleConfirmDelete()"
+    (onCancel)="handleCancelAction()">
+  </app-confirm-modal>
+
+  <!-- Confirm Suspend Modal -->
+  <app-confirm-modal
+    [isOpen]="confirmModalOpen() && confirmAction === 'suspend'"
+    title="{{ isSuspending ? 'Suspendre' : 'Réactiver' }} l'utilisateur"
+    [itemTitle]="selectedUserName"
+    (onConfirm)="handleConfirmSuspend()"
+    (onCancel)="handleCancelAction()">
+  </app-confirm-modal>
+
+</div>

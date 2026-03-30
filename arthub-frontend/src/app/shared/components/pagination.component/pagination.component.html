@@ -1,0 +1,47 @@
+<nav class="flex items-center justify-center gap-2" aria-label="Pagination">
+  <!-- Bouton precedent -->
+  <button
+    (click)="goToPrevious()"
+    [disabled]="!hasPrevious()"
+    [class.opacity-50]="!hasPrevious()"
+    [class.cursor-not-allowed]="!hasPrevious()"
+    class="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50
+           transition disabled:hover:bg-white"
+    aria-label="Page précédente">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+  </button>
+
+  <!-- Numeros de page -->
+  @for (page of pages(); track page) {
+    @if (isNumber(page)) {
+      <button
+        (click)="goToPage($any(page))"
+        [class.bg-blue-600]="page === currentPage()"
+        [class.text-white]="page === currentPage()"
+        [class.hover:bg-gray-50]="page !== currentPage()"
+        class="px-4 py-2 rounded-lg border border-gray-300 transition min-w-[44px]"
+        [attr.aria-label]="'Page ' + page"
+        [attr.aria-current]="page === currentPage() ? 'page' : null">
+        {{ page }}
+      </button>
+    } @else {
+      <span class="px-2 text-gray-500">...</span>
+    }
+  }
+
+  <!-- Bouton suivant -->
+  <button
+    (click)="goToNext()"
+    [disabled]="!hasNext()"
+    [class.opacity-50]="!hasNext()"
+    [class.cursor-not-allowed]="!hasNext()"
+    class="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50
+           transition disabled:hover:bg-white"
+    aria-label="Page suivante">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+  </button>
+</nav>

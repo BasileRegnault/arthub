@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npx ng build:*)",
+      "Bash(php bin/console:*)",
+      "Bash(composer show:*)",
+      "Bash(composer require:*)",
+      "Bash(php -r:*)",
+      "Bash(\"/c/Users/basil/OneDrive/Documents/Dev/Symfony/arthub-api/tests/Functional/ArtistApiTest.php\":*)",
+      "Bash(powershell.exe -NoProfile -Command:*)",
+      "Bash(cmd.exe /c \"echo test > \"\"C:\\\\Users\\\\basil\\\\OneDrive\\\\Documents\\\\Dev\\\\Symfony\\\\arthub-api\\\\tests\\\\Functional\\\\ArtistApiTest.php\"\"\")",
+      "Bash(cmd.exe /c \"type nul > \"\"C:\\\\Users\\\\basil\\\\OneDrive\\\\Documents\\\\Dev\\\\Symfony\\\\arthub-api\\\\tests\\\\Functional\\\\ArtistApiTest.php\"\" 2>&1 && echo OK || echo FAIL\")",
+      "Bash(python3:*)",
+      "Bash(php:*)",
+      "WebFetch(domain:api.artic.edu)",
+      "Bash(docker compose:*)",
+      "Read(//c/Users/basil/OneDrive/Documents/Dev/Symfony/**)"
+    ]
+  }
+}

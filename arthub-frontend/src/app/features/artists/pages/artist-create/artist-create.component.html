@@ -1,0 +1,95 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Back Button -->
+    <app-back-button
+      label="Retour aux artistes"
+      route="/artists" />
+
+    <!-- Header -->
+    <div class="bg-white rounded-xl shadow-md p-8 mb-6">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Créer un Nouvel Artiste</h1>
+      <p class="text-gray-600">Ajoutez un artiste à la base de données</p>
+    </div>
+
+    <!-- Global Error -->
+    <app-global-error-alert
+      [error]="globalError()"
+      (dismiss)="globalError.set(null)" />
+
+    <!-- Form -->
+    <form (ngSubmit)="submit()" [formGroup]="form" class="bg-white rounded-xl shadow-md p-8 space-y-6">
+      <!-- Names -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <app-form-field
+          label="Prénom"
+          [control]="form.controls.firstname"
+          placeholder="Prénom de l'artiste">
+        </app-form-field>
+
+        <app-form-field
+          label="Nom"
+          [control]="form.controls.lastname"
+          placeholder="Nom de l'artiste">
+        </app-form-field>
+      </div>
+
+      <!-- Nationality -->
+      <app-country-autocomplete
+        label="Nationalité"
+        placeholder="Rechercher un pays..."
+        formControlName="nationality">
+      </app-country-autocomplete>
+
+      <!-- Dates -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <app-form-field
+          label="Date de naissance"
+          type="date"
+          [control]="form.controls.bornAt"
+          placeholder="YYYY-MM-DD">
+        </app-form-field>
+
+        <app-form-field
+          label="Date de décès (optionnel)"
+          type="date"
+          [control]="form.controls.diedAt"
+          placeholder="YYYY-MM-DD">
+        </app-form-field>
+      </div>
+
+      <!-- Biography -->
+      <app-form-field
+        label="Biographie"
+        type="textarea"
+        [control]="form.controls.biography"
+        placeholder="Biographie de l'artiste...">
+      </app-form-field>
+
+      <!-- Profile Picture -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Photo de profil (optionnel)
+        </label>
+        <app-file-upload
+          [file]="fileSignal()"
+          (fileChange)="fileSignal.set($event)" />
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+        <button
+          type="submit"
+          [disabled]="submitting()"
+          class="px-8 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ submitting() ? 'Création en cours...' : 'Créer l\'Artiste' }}
+        </button>
+
+        @if (submitting()) {
+          <div class="text-gray-500 text-sm">
+            Envoi en cours...
+          </div>
+        }
+      </div>
+    </form>
+  </div>
+</div>

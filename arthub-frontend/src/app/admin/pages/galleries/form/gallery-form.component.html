@@ -1,0 +1,105 @@
+<div class="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-xl border border-gray-100">
+
+  <!-- Bouton retour -->
+  <app-back-button
+    label="Retour aux galeries"
+    route="/admin/galleries">
+  </app-back-button>
+
+  <h2 class="text-3xl font-semibold mb-6 text-gray-800">
+    {{ isEdit ? 'Modifier une galerie' : 'Créer une nouvelle galerie' }}
+  </h2>
+
+  <!-- Global Error Alert -->
+  <app-global-error-alert
+    [error]="globalError()"
+    (dismiss)="globalError.set(null)">
+  </app-global-error-alert>
+
+  <form (ngSubmit)="submit()" [formGroup]="form" class="space-y-6">
+
+    <!-- Nom -->
+    <app-form-field
+      label="Nom"
+      [control]="form.controls.name"
+      placeholder="Nom de la galerie">
+    </app-form-field>
+
+    <!-- Description -->
+    <app-form-field
+      label="Description"
+      type="textarea"
+      [control]="form.controls.description"
+      placeholder="Description de la galerie">
+    </app-form-field>
+
+    <!-- Image -->
+    <div class="flex items-start gap-4">
+      <app-file-upload
+        [file]="fileSignal()"
+        [initialPreview]="previewUrl()"
+        (fileChange)="fileSignal.set($event)">
+      </app-file-upload>
+    </div>
+
+    <!-- Public -->
+    <app-form-field
+      label="Galerie publique"
+      type="toggle"
+      [control]="form.controls.isPublic">
+    </app-form-field>
+
+    <!-- Artworks Selector -->
+    <div class="mt-6">
+      <app-artwork-selector
+        [formControl]="form.controls.artworks">
+      </app-artwork-selector>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-between mt-6">
+      <div class="flex gap-3">
+        <button
+          type="submit"
+          class="px-5 py-2 bg-blue-600 hover:bg-blue-700
+                 text-white rounded-lg shadow-sm transition">
+          {{ isEdit ? 'Mettre à jour' : 'Créer' }}
+        </button>
+
+        @if (isEdit) {
+          <button
+            type="button"
+            (click)="onDelete()"
+            class="px-5 py-2 bg-red-600 hover:bg-red-700
+                   text-white rounded-lg shadow-sm transition">
+            Supprimer
+          </button>
+        }
+      </div>
+
+      @if (submitting()) {
+        <div class="text-gray-500">
+          Envoi en cours...
+        </div>
+      }
+    </div>
+
+  </form>
+</div>
+
+<app-confirm-modal
+  [isOpen]="confirmModalOpen()"
+  title="Supprimer la galerie"
+  [itemTitle]="selectedGalleryName"
+  (onConfirm)="handleConfirmDelete()"
+  (onCancel)="handleCancelDelete()">
+</app-confirm-modal>
+
+<!-- Modal entités liées -->
+<app-related-entities-modal
+  [isOpen]="relatedEntitiesModalOpen"
+  [title]="relatedEntitiesTitle"
+  [message]="relatedEntitiesMessage"
+  [relatedData]="relatedEntitiesData"
+  (onClose)="closeRelatedEntitiesModal()">
+</app-related-entities-modal>

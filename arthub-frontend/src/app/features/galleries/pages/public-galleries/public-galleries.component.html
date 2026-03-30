@@ -1,0 +1,78 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Hero Header -->
+  <div class="bg-gradient-to-r from-slate-800 to-slate-700 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-bold mb-4">Collections Thematiques</h1>
+      <p class="text-xl text-white/90 mb-6">
+        Explorez les collections creees par notre communaute de contributeurs
+      </p>
+      <a
+        routerLink="/galleries/create"
+        class="inline-block px-6 py-3 bg-white text-slate-800 rounded-lg font-semibold hover:bg-slate-100 transition">
+        Creer une Collection
+      </a>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Search -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-slate-200">
+      <app-search-bar
+        [placeholder]="'Rechercher une galerie...'"
+        [initialValue]="searchTerm()"
+        (searchChange)="onSearch($event)" />
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="bg-white rounded-xl shadow-md overflow-hidden animate-pulse border border-slate-200">
+            <div class="aspect-video bg-slate-200"></div>
+            <div class="p-5 space-y-3">
+              <div class="h-5 bg-slate-200 rounded w-3/4"></div>
+              <div class="h-4 bg-slate-200 rounded w-full"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Galleries Grid -->
+    @else if (galleries()?.items && galleries()!.items.length > 0) {
+      <div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          @for (gallery of galleries()!.items; track gallery.id) {
+            <app-gallery-card [gallery]="gallery" />
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (galleries()!.lastPage && galleries()!.lastPage! > 1) {
+          <div class="flex justify-center">
+            <app-pagination
+              [currentPage]="page()"
+              [totalPages]="galleries()!.lastPage!"
+              (pageChange)="onPageChange($event)" />
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @else {
+      <div class="text-center py-16">
+        <svg class="w-24 h-24 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucune collection publique</h3>
+        <p class="text-gray-600 mb-6">Soyez le premier a creer une collection thematique</p>
+        <a
+          routerLink="/galleries/create"
+          class="inline-block px-6 py-3 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 transition">
+          Creer une Collection
+        </a>
+      </div>
+    }
+  </div>
+</div>
