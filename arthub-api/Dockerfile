@@ -27,7 +27,9 @@ COPY composer.json composer.lock symfony.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 COPY . .
-RUN composer run-script post-install-cmd \
+# Créer un .env minimal pour que Symfony puisse s'initialiser pendant le build
+RUN echo "APP_ENV=prod" > .env \
+    && echo "APP_DEBUG=0" >> .env \
     && php bin/console cache:warmup --env=prod \
     && chmod -R 775 var/
 
