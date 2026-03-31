@@ -50,7 +50,7 @@ services:
       - api-uploads:/app/public/uploads
       - api-jwt:/app/config/jwt
     healthcheck:
-      test: ["CMD-SHELL", "pgrep php-fpm || exit 1"]
+      test: ["CMD-SHELL", "ps aux | grep php-fpm | grep -v grep || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
