@@ -15,6 +15,10 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   API_IMAGE: ghcr.io/basilregnault/arthub-api
