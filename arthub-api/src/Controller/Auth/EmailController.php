@@ -51,7 +51,7 @@ class EmailController extends AbstractController
 
         // Envoi de l'email avec le nouveau mot de passe en clair
         $message = (new Email())
-            ->from('noreply@arthub.com')
+            ->from('noreply@arthubb.fr')
             ->to($email)
             ->subject('Votre nouveau mot de passe - ArtHub')
             ->html($this->buildPasswordEmail($newPassword, $user->getUsername()));
