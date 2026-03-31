@@ -15,113 +15,15 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: read
-  packages: write
-
-env:
-  REGISTRY: ghcr.io
-  API_IMAGE: ghcr.io/basilregnault/arthub-api
-  FRONTEND_IMAGE: ghcr.io/basilregnault/arthub-frontend
-
 jobs:
 
   # --------------------------------------------------
-  # JOB 1 : Build et push de l'image API (Symfony)
-  # --------------------------------------------------
-  build-api:
-    name: Build API
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Connexion à GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Extraire les métadonnées Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.API_IMAGE }}
-          tags: |
-            type=raw,value=latest
-
-      - name: Activer le cache Docker (BuildKit)
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build et push image API
-        uses: docker/build-push-action@v5
-        with:
-          context: ./arthub-api
-          dockerfile: ./arthub-api/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-
-  # --------------------------------------------------
-  # JOB 2 : Build et push de l'image Frontend (Angular)
-  # --------------------------------------------------
-  build-frontend:
-    name: Build Frontend
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Connexion à GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Extraire les métadonnées Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.FRONTEND_IMAGE }}
-          tags: |
-            type=raw,value=latest
-
-      - name: Activer le cache Docker (BuildKit)
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build et push image Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./arthub-frontend
-          dockerfile: ./arthub-frontend/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          # Injecter l'URL de l'API (configurée dans les secrets GitHub)
-          build-args: |
-            API_BASE_URL=${{ secrets.API_BASE_URL }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-
-  # --------------------------------------------------
-  # JOB 3 : Déploiement sur le VPS OVH
+  # JOB UNIQUE : Déploiement sur le VPS OVH
+  # Build directement sur le VPS (pas de registry)
   # --------------------------------------------------
   deploy:
     name: Deploy sur VPS
     runs-on: ubuntu-latest
-    needs: [build-api, build-frontend]  # Attend que les 2 builds soient OK
 
     steps:
       - name: Déployer via SSH
@@ -138,17 +40,10 @@ jobs:
             cd /opt/arthub
             git pull origin main
 
-            echo "=== Connexion à ghcr.io ==="
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u basilregnault --password-stdin
-
-            echo "=== Pull des nouvelles images ==="
-            docker compose pull
-
-            echo "=== Redémarrage des conteneurs ==="
-            docker compose up -d --remove-orphans
+            echo "=== Build et redémarrage des conteneurs ==="
+            docker compose up -d --build --remove-orphans
 
             echo "=== Migrations base de données ==="
-            # Attendre que l'API soit prête
             sleep 5
             docker compose exec -T api php bin/console doctrine:migrations:migrate --env=prod --no-interaction
 

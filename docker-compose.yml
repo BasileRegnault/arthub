@@ -27,7 +27,6 @@ services:
 
   # ---- Backend Symfony (PHP-FPM) ----
   api:
-    image: ghcr.io/basilregnault/arthub-api:latest
     build:
       context: ./arthub-api
       dockerfile: Dockerfile
@@ -75,7 +74,6 @@ services:
 
   # ---- Frontend Angular ----
   frontend:
-    image: ghcr.io/basilregnault/arthub-frontend:latest
     build:
       context: ./arthub-frontend
       dockerfile: Dockerfile
