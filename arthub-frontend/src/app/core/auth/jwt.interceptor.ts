@@ -58,9 +58,13 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
           catchError(() => {
             isRefreshing = false;
 
-            // Refresh échoué : déconnecter et rediriger
+            // Refresh échoué : rediriger uniquement si l'utilisateur avait une session active
+            // (évite la redirection pour les anonymes qui appellent un endpoint protégé)
+            const hadSession = !!localStorage.getItem('refresh_token');
             auth.logout();
-            router.navigate(['/auth/login'], { queryParams: { reason: 'expired' } });
+            if (hadSession) {
+              router.navigate(['/auth/login'], { queryParams: { reason: 'expired' } });
+            }
 
             return EMPTY;
           })

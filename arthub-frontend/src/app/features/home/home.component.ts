@@ -70,14 +70,13 @@ export class HomeComponent implements OnInit {
       artworks: this.api.list('artworks', 1, 1),
       artists: this.api.list('artists', 1, 1),
       galleries: this.api.list('galleries', 1, 1),
-      users: this.api.list('users', 1, 1),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ artworks, artists, galleries, users }) => {
+      next: ({ artworks, artists, galleries }) => {
         this.stats.set({
           artworks: artworks?.total || 0,
           artists: artists?.total || 0,
           galleries: galleries?.total || 0,
-          users: users?.total || 0,
+          users: 0,
         });
         this.loading.set(false);
       },
