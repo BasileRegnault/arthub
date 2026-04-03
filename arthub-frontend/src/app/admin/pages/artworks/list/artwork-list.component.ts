@@ -66,7 +66,7 @@ export class ArtworkListComponent {
   artworksWithImages = computed(() =>
     this.artworks()?.items.map(a => ({
       ...a,
-      imageUrl: a.image?.contentUrl ? environment.apiBaseUrl + a.image.contentUrl : (a.imageUrl ?? 'assets/default-image.png')
+      imageUrl: a.image?.contentUrl ? environment.apiBaseUrl + a.image.contentUrl : (a.imageUrl ?? 'assets/default-image.svg')
     })) || []
   );
 
@@ -213,7 +213,7 @@ export class ArtworkListComponent {
 
   onPreview(id?: number) {
     if (!id) return;
-    this.router.navigate(['/admin/preview/artworks', id]);
+    window.open(`/artworks/${id}`, '_blank');
   }
 
   onDelete(id?: number, title: string = '') {

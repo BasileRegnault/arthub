@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\User;
 use App\Entity\ValidationDecision;
 use App\Enum\ValidationSubjectType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -29,6 +30,36 @@ class ValidationDecisionRepository extends ServiceEntityRepository
         }
         if ($subjectId) {
             $qb->andWhere('v.subjectId = :sid')->setParameter('sid', $subjectId);
+        }
+
+        $qb->setFirstResult(($page - 1) * $itemsPerPage)
+           ->setMaxResults($itemsPerPage);
+
+        $paginator = new Paginator($qb, true);
+        $total = count($paginator);
+
+        return [
+            'items' => iterator_to_array($paginator),
+            'total' => $total,
+            'page' => $page,
+            'itemsPerPage' => $itemsPerPage,
+            'lastPage' => (int) max(1, (int) ceil($total / $itemsPerPage)),
+        ];
+    }
+
+    public function paginateBySubmittedBy(
+        User $user,
+        int $page,
+        int $itemsPerPage,
+        ?ValidationSubjectType $subjectType = null
+    ): array {
+        $qb = $this->createQueryBuilder('v')
+            ->andWhere('v.submittedBy = :user')
+            ->setParameter('user', $user)
+            ->orderBy('v.createdAt', 'DESC');
+
+        if ($subjectType) {
+            $qb->andWhere('v.subjectType = :t')->setParameter('t', $subjectType);
         }
 
         $qb->setFirstResult(($page - 1) * $itemsPerPage)

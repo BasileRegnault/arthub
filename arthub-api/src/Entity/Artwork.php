@@ -44,10 +44,12 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             securityMessage: "Vous devez être connecté pour créer une œuvre."
         ),
         new Put(
+            processor: ArtworkProcessor::class,
             security: "is_granted('ROLE_ADMIN') or object.getCreatedBy() == user",
             securityMessage: "Vous ne pouvez modifier que vos propres œuvres."
         ),
         new Patch(
+            processor: ArtworkProcessor::class,
             security: "is_granted('ROLE_ADMIN') or object.getCreatedBy() == user",
             securityMessage: "Vous ne pouvez modifier que vos propres œuvres."
         ),
@@ -138,11 +140,11 @@ class Artwork
     #[ORM\ManyToOne(targetEntity: MediaObject::class)]
     #[ORM\JoinColumn(nullable: true)]
     #[ApiProperty(types: ['https://schema.org/image'])]
-    #[Groups(['artwork:read', 'artwork:write', 'gallery:read'])]
+    #[Groups(['artwork:read', 'artwork:write', 'artist:read', 'gallery:read'])]
     private ?MediaObject $image = null;
 
     #[ORM\Column(length: 512, nullable: true)]
-    #[Groups(['artwork:read', 'artwork:write', 'gallery:read'])]
+    #[Groups(['artwork:read', 'artwork:write', 'artist:read', 'gallery:read'])]
     private ?string $imageUrl = null;
 
     #[ORM\Column(length: 255, nullable: true)]

@@ -116,7 +116,7 @@ export class MyRatingsComponent implements OnInit {
   getArtworkImageUrl(artwork: any): string {
     return artwork?.image?.contentUrl
       ? environment.apiBaseUrl + artwork.image.contentUrl
-      : 'assets/default-image.png';
+      : 'assets/default-image.svg';
   }
 
   getArtworkId(rating: Rating): number | null {

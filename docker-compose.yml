@@ -35,6 +35,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      libretranslate:
+        condition: service_healthy
     environment:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET:?Définir APP_SECRET dans .env}
@@ -45,6 +47,7 @@ services:
       JWT_PASSPHRASE: ${JWT_PASSPHRASE:?Définir JWT_PASSPHRASE dans .env}
       CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-'^https?://(localhost|arthubb\.fr)(:[0-9]+)?$'}
       MAILER_DSN: ${MAILER_DSN:-smtp://localhost:1025}
+      LIBRETRANSLATE_URL: "http://libretranslate:5000"
     volumes:
       - api-uploads:/app/public/uploads
       - api-jwt:/app/config/jwt
@@ -81,6 +84,19 @@ services:
         API_BASE_URL: ${API_BASE_URL:-http://localhost:8000}
     container_name: arthub-frontend
     restart: unless-stopped
+
+  # ---- LibreTranslate (traduction EN → FR sans quota) ----
+  libretranslate:
+    image: libretranslate/libretranslate
+    container_name: arthub-libretranslate
+    restart: unless-stopped
+    command: ["--load-only", "en,fr"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5000/languages || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
 
   # ---- Certbot (SSL) ----
   certbot:

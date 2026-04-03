@@ -107,6 +107,14 @@
                       </svg>
                       En attente
                     </span>
+                    <a
+                      [routerLink]="['/artworks/edit', artwork.id]"
+                      class="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-700 text-sm font-medium rounded-full hover:bg-slate-200 transition">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z" />
+                      </svg>
+                      Modifier
+                    </a>
                   </div>
                 </div>
               }
@@ -158,6 +166,14 @@
                       </svg>
                       En attente
                     </span>
+                    <a
+                      [routerLink]="['/artists/edit', artist.id]"
+                      class="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-700 text-sm font-medium rounded-full hover:bg-slate-200 transition">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z" />
+                      </svg>
+                      Modifier
+                    </a>
                   </div>
                 </div>
               }
@@ -167,54 +183,85 @@
       </div>
     </div>
 
-    <!-- History Section -->
+    <!-- Historique des décisions de modération -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
       <div class="p-6 border-b border-slate-200">
         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
           <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
-          Contributions validées
+          Historique des décisions
         </h2>
       </div>
       <div class="p-6">
-        @if (historyArtworks().length === 0 && historyArtists().length === 0) {
-          <p class="text-center text-slate-500 py-8">Aucune contribution validée pour le moment</p>
+        @if (historyLoading()) {
+          <div class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700"></div>
+          </div>
+        } @else if (validationHistory().length === 0) {
+          <p class="text-center text-slate-500 py-8">Aucune décision pour le moment</p>
         } @else {
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @for (artwork of historyArtworks(); track artwork.id) {
-              <a
-                [routerLink]="['/artworks', artwork.id]"
-                class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition">
+          <div class="space-y-4">
+            @for (decision of validationHistory(); track decision.id) {
+              <div class="flex items-start gap-4 p-4 rounded-xl border"
+                [class.bg-green-50]="decision.status === 'approved'"
+                [class.border-green-200]="decision.status === 'approved'"
+                [class.bg-red-50]="decision.status === 'rejected'"
+                [class.border-red-200]="decision.status === 'rejected'">
+
                 <img
-                  [src]="getArtworkImage(artwork)"
-                  [alt]="artwork.title"
-                  class="w-12 h-12 object-cover rounded">
+                  [src]="getSubjectImage(decision)"
+                  class="w-14 h-14 object-cover rounded-lg flex-shrink-0"
+                  [class.rounded-full]="decision.subjectType === 'artist'">
+
                 <div class="flex-1 min-w-0">
-                  <h4 class="font-medium text-slate-800 truncate text-sm">{{ artwork.title }}</h4>
-                  <span class="text-xs text-green-700">Œuvre validée</span>
+                  <div class="flex items-center gap-2 mb-1">
+                    <h4 class="font-semibold text-slate-800 truncate">{{ getSubjectName(decision) }}</h4>
+                    <span class="text-xs text-slate-400">
+                      {{ decision.subjectType === 'artwork' ? 'Œuvre' : 'Artiste' }}
+                    </span>
+                  </div>
+
+                  <p class="text-xs text-slate-400 mb-2">Décidé le {{ formatDate(decision.createdAt) }}</p>
+
+                  @if (decision.reason) {
+                    <div class="text-sm rounded-lg px-3 py-2 mt-1"
+                      [class.bg-red-100]="decision.status === 'rejected'"
+                      [class.text-red-800]="decision.status === 'rejected'"
+                      [class.bg-green-100]="decision.status === 'approved'"
+                      [class.text-green-800]="decision.status === 'approved'">
+                      <span class="font-medium">Message du modérateur :</span> {{ decision.reason }}
+                    </div>
+                  }
                 </div>
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </a>
-            }
-            @for (artist of historyArtists(); track artist.id) {
-              <a
-                [routerLink]="['/artists', artist.id]"
-                class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition">
-                <img
-                  [src]="getArtistImage(artist)"
-                  [alt]="artist.firstname + ' ' + artist.lastname"
-                  class="w-12 h-12 object-cover rounded-full">
-                <div class="flex-1 min-w-0">
-                  <h4 class="font-medium text-slate-800 truncate text-sm">{{ artist.firstname }} {{ artist.lastname }}</h4>
-                  <span class="text-xs text-green-700">Artiste validé</span>
+
+                <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                  @if (decision.status === 'approved') {
+                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Validé
+                    </span>
+                    <a [routerLink]="getSubjectLink(decision)" class="text-xs text-green-700 hover:underline">
+                      Voir la page →
+                    </a>
+                  } @else {
+                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Refusé
+                    </span>
+                    <a
+                      [routerLink]="['/' + (decision.subjectType === 'artwork' ? 'artworks' : 'artists') + '/edit', decision.subjectId]"
+                      class="text-xs text-red-700 hover:underline font-medium">
+                      Corriger et resoumettre →
+                    </a>
+                  }
                 </div>
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </a>
+
+              </div>
             }
           </div>
         }

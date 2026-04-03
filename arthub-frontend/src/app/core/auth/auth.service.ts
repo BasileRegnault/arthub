@@ -4,15 +4,6 @@ import { catchError, of, tap, throwError, Observable, shareReplay, firstValueFro
 import { environment } from '../../environments/environment';
 import { User } from '../models/user.model';
 
-// Mock user pour le mode dev bypass (uniquement en développement)
-const DEV_MOCK_USER: User = {
-  id: 1,
-  username: 'DevUser',
-  email: 'dev@arthub.local',
-  roles: ['ROLE_USER', 'ROLE_ADMIN'],
-  isSuspended: false
-};
-
 interface LoginResponse {
   token: string;
   refresh_token: string;
@@ -24,7 +15,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private api = environment.apiUrl;
 
-  // Cache pour éviter les appels multiples à /me
+  // On garde une seule requête en vol pour éviter les appels dupliqués à /me
   private meRequest$: Observable<User> | null = null;
 
   user = signal<User | null>(null);
@@ -32,45 +23,30 @@ export class AuthService {
   userLoaded = signal<boolean>(false);
 
   constructor() {
-    // Charger automatiquement l'utilisateur si un token valide existe
+    // Si l'utilisateur a déjà un token valide, on charge son profil dès le démarrage
     if (this.isAuthenticated()) {
       this.loadCurrentUser();
     }
   }
 
-  /**
-   * Vérifie si le mode dev bypass est actif
-   * Fonctionne uniquement si production=false ET devBypassAuth=true
-   */
-  private get isDevBypassActive(): boolean {
-    return !environment.production && (environment as any).devBypassAuth === true;
-  }
-
-  // ---------- LOGIN ----------
+  // ── Connexion ──────────────────────────────────────────────────────────────
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.api}/login`, {
-      email,
-      password
-    }).pipe(
+    return this.http.post<LoginResponse>(`${this.api}/login`, { email, password }).pipe(
       tap(res => this.saveTokens(res.token, res.refresh_token)),
       tap(() => this.fetchMe().subscribe())
     );
   }
 
-  // ---------- REGISTER (sans auto-login, le composant s'en charge) ----------
+  // ── Inscription (la connexion automatique est gérée par le composant) ──────
   register(email: string, username: string, password: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.api}/register`, {
-      email,
-      username,
-      password
-    });
+    return this.http.post<{ message: string }>(`${this.api}/register`, { email, username, password });
   }
 
-  // ---------- REFRESH ----------
+  // ── Renouvellement du token ────────────────────────────────────────────────
   refreshToken(): Observable<LoginResponse> {
     const refresh = localStorage.getItem('refresh_token');
     if (!refresh) {
-      return throwError(() => new Error('No refresh token'));
+      return throwError(() => new Error('Aucun refresh token disponible'));
     }
 
     return this.http.post<LoginResponse>(`${this.api}/token/refresh`, {
@@ -80,7 +56,7 @@ export class AuthService {
     );
   }
 
-  // ---------- TOKEN STORAGE ----------
+  // ── Gestion des tokens ─────────────────────────────────────────────────────
   saveTokens(token: string, refresh?: string) {
     localStorage.setItem('token', token);
     if (refresh) {
@@ -97,48 +73,37 @@ export class AuthService {
     this.meRequest$ = null;
   }
 
-  // ---------- USER ----------
+  // ── Profil utilisateur ─────────────────────────────────────────────────────
   get token(): string | null {
     return localStorage.getItem('token');
   }
 
   get currentUser(): User | null {
-    if (this.isDevBypassActive) return DEV_MOCK_USER;
     return this.user();
   }
 
   /**
-   * Charge l'utilisateur courant depuis /me
-   * Utilise un cache pour éviter les appels multiples simultanés
+   * Charge le profil de l'utilisateur connecté depuis /me.
+   * Si une requête est déjà en cours, on la réutilise plutôt qu'en lancer une nouvelle.
    */
   loadCurrentUser(): Observable<User | null> {
-    // Mode dev bypass
-    if (this.isDevBypassActive) {
-      this.user.set(DEV_MOCK_USER);
-      this.userLoaded.set(true);
-      return of(DEV_MOCK_USER);
-    }
-
-    // Si déjà chargé, retourner l'utilisateur
+    // Déjà chargé, pas besoin de refaire un appel
     if (this.userLoaded() && this.user()) {
       return of(this.user());
     }
 
-    // Si une requête est déjà en cours, la réutiliser
+    // Une requête est déjà en vol, on s'y accroche
     if (this.meRequest$) {
       return this.meRequest$;
     }
 
     this.userLoading.set(true);
 
-    // Créer et cacher la requête
+    // L'API peut renvoyer le profil en format plat { id, email, ... }
+    // ou imbriqué { email, roles, user: { id, ... } } — on gère les deux
     this.meRequest$ = this.http.get<User & { user?: User }>(`${this.api}/me`).pipe(
       tap(response => {
-        // Gérer les deux formats possibles :
-        // 1. Format plat : { id, email, username, roles, ... }
-        // 2. Format imbriqué : { email, roles, user: { id, ... } }
         const userData = response.user ?? response;
-
         this.user.set(userData);
         this.userLoaded.set(true);
         this.userLoading.set(false);
@@ -157,19 +122,15 @@ export class AuthService {
     return this.meRequest$;
   }
 
-  /**
-   * Alias pour compatibilité - utilise loadCurrentUser
-   */
+  /** Alias pour compatibilité avec le reste du code */
   fetchMe(): Observable<User | null> {
     return this.loadCurrentUser();
   }
 
   /**
-   * Récupère l'utilisateur de manière asynchrone (Promise)
-   * Utile pour les guards et resolvers
+   * Version Promise de loadCurrentUser — pratique dans les guards et resolvers
    */
   async getCurrentUserAsync(): Promise<User | null> {
-    if (this.isDevBypassActive) return DEV_MOCK_USER;
     if (this.userLoaded() && this.user()) return this.user();
 
     try {
@@ -180,31 +141,16 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    // Mode dev bypass : toujours retourner true si le bypass est actif
-    if (this.isDevBypassActive) {
-      return true;
-    }
-
     const payload = this.decodeJwt();
     return !!payload && payload.exp * 1000 > Date.now();
   }
 
-  /**
-   * Vérifie si l'utilisateur a un rôle spécifique
-   */
+  /** Vérifie si l'utilisateur possède un rôle donné */
   hasRole(role: string): boolean {
-    if (this.isDevBypassActive) {
-      return DEV_MOCK_USER.roles.includes(role);
-    }
-
-    const currentUser = this.user();
-    if (!currentUser?.roles) return false;
-    return currentUser.roles.includes(role);
+    return this.user()?.roles?.includes(role) ?? false;
   }
 
-  /**
-   * Vérifie si l'utilisateur est admin
-   */
+  /** Raccourci pour vérifier si l'utilisateur est administrateur */
   isAdmin(): boolean {
     return this.hasRole('ROLE_ADMIN');
   }

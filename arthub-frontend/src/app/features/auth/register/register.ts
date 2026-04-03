@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControlOptions, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -22,39 +22,39 @@ export class RegisterComponent {
     username: ['', Validators.required],
     password: ['', Validators.required],
     confirmPassword: ['', Validators.required]
-  }, { validators: this.passwordsMatch });
+  }, { validators: this.passwordsMatch } as AbstractControlOptions);
 
   success = false;
   error?: string;
   loading = false;
 
+  // URL de retour validée : on vérifie qu'elle est bien relative à notre app
   returnUrl = '/';
 
   ngOnInit() {
-    this.returnUrl =
-      this.route.snapshot.queryParamMap.get('returnUrl') || '/';
+    const raw = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+    this.returnUrl = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
   }
 
   submit() {
     if (this.form.invalid) return;
-    
+
     this.loading = true;
     this.error = undefined;
 
     const { email, username, password } = this.form.value;
 
-    // Appel a l'API register
     this.auth.register(email!, username!, password!).subscribe({
       next: () => {
         this.success = true;
 
-        // Connexion automatique apres l'inscription
+        // On connecte l'utilisateur automatiquement après l'inscription
         this.auth.login(email!, password!).subscribe({
           next: () => {
             this.loading = false;
             this.router.navigateByUrl(this.returnUrl);
           },
-          error: err => {
+          error: () => {
             this.loading = false;
             this.error = 'Inscription réussie mais impossible de se connecter automatiquement.';
           }
@@ -62,7 +62,7 @@ export class RegisterComponent {
       },
       error: (err: { error: { error: string; }; }) => {
         this.loading = false;
-        this.error = err.error?.error || 'Erreur lors de l’inscription';
+        this.error = err.error?.error || 'Erreur lors de l\'inscription';
       }
     });
   }
@@ -70,7 +70,6 @@ export class RegisterComponent {
   passwordsMatch(group: FormGroup) {
     const password = group.get('password')?.value;
     const confirm = group.get('confirmPassword')?.value;
-
     return password === confirm ? null : { passwordsMismatch: true };
   }
 }

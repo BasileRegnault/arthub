@@ -52,7 +52,7 @@ export class ValidationArtworkListComponent {
       ...a,
       imageUrl: (a as any)?.image?.contentUrl
         ? environment.apiBaseUrl + (a as any).image.contentUrl
-        : ((a as any).imageUrl ?? 'assets/default-artwork.png')
+        : ((a as any).imageUrl ?? 'assets/default-image.svg')
     })) || []
   );
 
@@ -104,7 +104,7 @@ export class ValidationArtworkListComponent {
 
   onPreview(id?: number) {
     if (!id) return;
-    this.router.navigate(['/admin/preview/artworks', id, 'preview']);
+    window.open(`/artworks/${id}`, '_blank');
   }
 
   toggleSelection(id?: number) {

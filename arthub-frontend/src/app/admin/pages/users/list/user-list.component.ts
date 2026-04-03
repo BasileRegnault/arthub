@@ -53,7 +53,7 @@ export class UserListComponent {
       ...u,
       profilePictureUrl: u.profilePicture?.contentUrl
         ? environment.apiBaseUrl + u.profilePicture.contentUrl
-        : 'assets/default-avatar.png'
+        : 'assets/default-avatar.svg'
     })) || []
   );
 

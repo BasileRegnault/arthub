@@ -63,6 +63,9 @@ arthub-frontend/.env.local
 .vscode/
 .idea/
 *.sublime-project
+
+# Claude Code (paramètres locaux non versionnés)
+**/.claude/
 *.sublime-workspace
 nbproject/
 

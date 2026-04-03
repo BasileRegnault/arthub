@@ -2,6 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { switchMap, of } from 'rxjs';
+import { toSlugId } from '../../../../shared/utils/slugify';
 import { ApiPlatformService } from '../../../../core/services/api-platform.service';
 import { FormErrorHandlerService } from '../../../../core/services/form-error-handler.service';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -10,6 +12,7 @@ import { FileUploadComponent } from '../../../../shared/components/file-upload.c
 import { BackButtonComponent } from '../../../../shared/components/back-button.component/back-button.component';
 import { GlobalErrorAlertComponent } from '../../../../shared/components/global-error-alert.component/global-error-alert.component';
 import { AppCountryAutocompleteComponent } from '../../../../shared/components/app-country-autocomplete.component/app-country-autocomplete.component';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-artist-create',
@@ -31,10 +34,16 @@ export class ArtistCreateComponent {
   private router = inject(Router);
   private toast = inject(ToastService);
   private errorHandler = inject(FormErrorHandlerService);
+  private authService = inject(AuthService);
+
+  get isAdmin(): boolean {
+    return this.authService.currentUser?.roles?.includes('ROLE_ADMIN') ?? false;
+  }
 
   fileSignal = signal<File | null>(null);
   submitting = signal(false);
   globalError = signal<string | null>(null);
+  duplicateError = signal<string | null>(null);
 
   form = this.fb.group({
     firstname: ['', [Validators.required, Validators.maxLength(255)]],
@@ -47,6 +56,7 @@ export class ArtistCreateComponent {
 
   submit() {
     this.globalError.set(null);
+    this.duplicateError.set(null);
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -56,6 +66,29 @@ export class ArtistCreateComponent {
 
     this.submitting.set(true);
 
+    const firstname = (this.form.value.firstname ?? '').trim();
+    const lastname = (this.form.value.lastname ?? '').trim();
+
+    // Vérification doublons : artistes existants ET en attente de validation
+    this.api.list('artists', 1, 1, { firstname, lastname }).subscribe({
+      next: (res: any) => {
+        if (res.total > 0) {
+          this.submitting.set(false);
+          this.duplicateError.set(
+            `Un artiste nommé "${firstname} ${lastname}" existe déjà ou est en cours de validation.`
+          );
+          return;
+        }
+        this.proceedWithUploadAndCreate();
+      },
+      error: () => {
+        // En cas d'erreur API on laisse passer
+        this.proceedWithUploadAndCreate();
+      }
+    });
+  }
+
+  private proceedWithUploadAndCreate() {
     const file = this.fileSignal();
 
     const proceed = (profilePictureIri: string | null) => {
@@ -75,8 +108,13 @@ export class ArtistCreateComponent {
       this.api.create('artists', payload).subscribe({
         next: (artist: any) => {
           this.submitting.set(false);
-          this.toast.show('Artiste créé avec succès', 'success');
-          this.router.navigate(['/artists', artist.id]);
+          if (artist.isConfirmCreate === false) {
+            this.toast.show('Artiste soumis ! Il sera publié après validation par notre équipe.', 'success');
+            this.router.navigate(['/my-submissions']);
+          } else {
+            this.toast.show('Artiste créé avec succès', 'success');
+            this.router.navigate(['/artists', toSlugId(artist.id, `${artist.firstname} ${artist.lastname}`)]);
+          }
         },
         error: (e: any) => {
           this.submitting.set(false);
@@ -91,7 +129,6 @@ export class ArtistCreateComponent {
       return;
     }
 
-    // Upload de la photo de profil
     this.api.createFormData(file).subscribe({
       next: (media: any) => {
         const iri = media?.['@id'] ?? null;

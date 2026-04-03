@@ -133,6 +133,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read', 'user:write', 'user:detail'])]
     private ?bool $isSuspended = false;
 
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $passwordResetToken = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $passwordResetTokenExpiresAt = null;
+
     /**
      * @var Collection<int, Gallery>
      */
@@ -521,6 +527,37 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    public function getPasswordResetToken(): ?string
+    {
+        return $this->passwordResetToken;
+    }
+
+    public function setPasswordResetToken(?string $token): static
+    {
+        $this->passwordResetToken = $token;
+
+        return $this;
+    }
+
+    public function getPasswordResetTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->passwordResetTokenExpiresAt;
+    }
+
+    public function setPasswordResetTokenExpiresAt(?\DateTimeImmutable $expiresAt): static
+    {
+        $this->passwordResetTokenExpiresAt = $expiresAt;
+
+        return $this;
+    }
+
+    public function isPasswordResetTokenValid(): bool
+    {
+        return $this->passwordResetToken !== null
+            && $this->passwordResetTokenExpiresAt !== null
+            && $this->passwordResetTokenExpiresAt > new \DateTimeImmutable();
     }
 
 }

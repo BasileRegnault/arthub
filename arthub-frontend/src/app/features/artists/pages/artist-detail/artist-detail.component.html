@@ -11,7 +11,7 @@
   </div>
 } @else if (artist()) {
   <div>
-    <!-- Hero Section -->
+    <!-- Bandeau de l'artiste -->
     <div class="relative h-80 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600">
       <div class="absolute inset-0 bg-black/20"></div>
     </div>
@@ -22,7 +22,7 @@
         <app-breadcrumb [items]="breadcrumbs()" />
       </div>
 
-      <!-- Artist Card (overlapping hero) -->
+      <!-- Carte artiste (chevauchement bandeau) -->
       <div class="relative -mt-32 mb-8">
         <div class="bg-white rounded-xl shadow-xl p-8 border border-slate-200">
           <div class="flex flex-col md:flex-row gap-8 items-start">
@@ -31,7 +31,8 @@
               <img
                 [src]="profileImageUrl()"
                 [alt]="artist()!.firstname + ' ' + artist()!.lastname"
-                class="w-40 h-40 rounded-full object-cover border-4 border-white shadow-lg">
+                class="w-40 h-40 rounded-full object-cover border-4 border-white shadow-lg"
+                (error)="$any($event.target).src='assets/default-avatar.svg'">
             </div>
 
             <!-- Info -->
@@ -75,7 +76,7 @@
         </div>
       </div>
 
-      <!-- Biography Section -->
+      <!-- Biographie -->
       @if (artist()!.biography) {
         <section class="mb-12">
           <div class="bg-white rounded-xl shadow-md p-8 border border-slate-200">
@@ -87,7 +88,7 @@
         </section>
       }
 
-      <!-- Artworks Section -->
+      <!-- Œuvres de l'artiste -->
       <section class="mb-12">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-gray-900">Oeuvres</h2>

@@ -32,7 +32,7 @@ export class ProfileComponent implements OnInit {
     const user = this.currentUser();
     return user?.username
       ? `https://ui-avatars.com/api/?name=${user.username}&size=200&background=random`
-      : 'assets/default-avatar.png';
+      : 'assets/default-avatar.svg';
   });
 
   ngOnInit() {

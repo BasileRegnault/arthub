@@ -14,8 +14,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use App\Repository\UserRepository;
-use Symfony\Component\HttpKernel\KernelInterface;
 
 class ValidateController extends AbstractController
 {
@@ -26,12 +24,8 @@ class ValidateController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         NormalizerInterface $normalizer,
-        UserRepository $userRepository,
-        KernelInterface $kernel,
     ): JsonResponse {
-        if (!$kernel->isDebug()) {
-            $this->denyAccessUnlessGranted('ROLE_ADMIN');
-        }
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $subjectType = match ($type) {
             'artist' => ValidationSubjectType::ARTIST,
@@ -40,7 +34,7 @@ class ValidateController extends AbstractController
         };
 
         if (!$subjectType) {
-            return $this->json(['message' => 'Invalid type'], 400);
+            return $this->json(['message' => 'Type invalide'], 400);
         }
 
         $payload = json_decode($request->getContent() ?: '{}', true);
@@ -53,7 +47,7 @@ class ValidateController extends AbstractController
         };
 
         if (!$status) {
-            return $this->json(['message' => 'Invalid status'], 400);
+            return $this->json(['message' => 'Statut invalide'], 400);
         }
 
         $reason = isset($payload['reason']) ? trim((string) $payload['reason']) : null;
@@ -65,29 +59,23 @@ class ValidateController extends AbstractController
         };
 
         if (!$subject) {
-            return $this->json(['message' => 'Subject not found'], 404);
+            return $this->json(['message' => 'Élément introuvable'], 404);
         }
 
         $admin = $this->getUser();
 
         if (!$admin instanceof User) {
-            if ($kernel->isDebug()) {
-                $admin = $userRepository->findOneBy(['username' => 'admin']);
-            }
-        }
-
-        if (!$admin instanceof User) {
-            return $this->json(['message' => 'Admin not found'], 500);
+            return $this->json(['message' => 'Administrateur introuvable'], 500);
         }
 
         if ($subject instanceof Artist) {
             $subject->setIsConfirmCreate($status === ValidationStatus::APPROVED);
-            $subject->setToBeConfirmed(true);
+            $subject->setToBeConfirmed(false);
         }
 
         if ($subject instanceof Artwork) {
             $subject->setIsConfirmCreate($status === ValidationStatus::APPROVED);
-            $subject->setToBeConfirmed(true);
+            $subject->setToBeConfirmed(false);
 
             if ($status === ValidationStatus::REJECTED) {
                 $subject->setIsDisplay(false);

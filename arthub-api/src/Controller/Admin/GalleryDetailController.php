@@ -25,9 +25,11 @@ class GalleryDetailController extends AbstractController
         EntityManagerInterface $em,
         Request $request
     ): JsonResponse {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
         $gallery = $galleryRepo->find($id);
         if (!$gallery) {
-            return $this->json(['message' => 'Gallery not found'], 404);
+            return $this->json(['message' => 'Galerie introuvable'], 404);
         }
 
         $range = (int) $request->query->get('range', 30);

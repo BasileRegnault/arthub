@@ -1,6 +1,7 @@
 import { Component, DestroyRef, input, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { toSlugId } from '../../../shared/utils/slugify';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Artwork } from '../../../core/models/artwork.model';
 import { environment } from '../../../environments/environment';
@@ -29,7 +30,7 @@ export class ArtistCardComponent {
     getArtistImageUrl(artist: Artist): string {
       if (artist.profilePicture?.contentUrl) return environment.apiBaseUrl + artist.profilePicture.contentUrl;
       if (artist.imageUrl) return artist.imageUrl;
-      return 'assets/default-avatar.png';
+      return 'assets/default-avatar.svg';
     }
 
     getArtistTopArtworkUrl(artist: Artist): string | null {
@@ -40,9 +41,10 @@ export class ArtistCardComponent {
       return null;
     }
   
-    navigateToArtist(artistId?: number) {
-      if (artistId) {
-        this.router.navigate(['/artists', artistId]);
+    navigateToArtist(artist = this.artist()) {
+      if (artist?.id) {
+        const slug = toSlugId(artist.id, `${artist.firstname} ${artist.lastname}`);
+        this.router.navigate(['/artists', slug]);
       }
     }
 

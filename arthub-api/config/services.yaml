@@ -53,7 +53,20 @@ services:
             $viewsRepo: '@App\Repository\ArtworkDailyViewRepository'                   
     App\Security\IpHasher:
         arguments:
-            $appSecret: '%kernel.secret%'         
+            $appSecret: '%kernel.secret%'
+
+    App\Controller\Auth\RegisterController:
+        arguments:
+            $registerIpLimiter: '@limiter.register_ip'
+
+    App\Controller\Auth\EmailController:
+        arguments:
+            $forgotPasswordIpLimiter: '@limiter.forgot_password_ip'
+
+    App\Service\TranslationService:
+        arguments:
+            $libreTranslateUrl: '%env(LIBRETRANSLATE_URL)%'
+            $libreTranslateApiKey: '%env(default::LIBRETRANSLATE_API_KEY)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

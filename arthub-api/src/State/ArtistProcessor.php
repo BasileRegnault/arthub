@@ -4,6 +4,8 @@ namespace App\State;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\State\ProcessorInterface;
 use App\Entity\Artist;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -23,14 +25,17 @@ class ArtistProcessor implements ProcessorInterface
         array $uriVariables = [],
         array $context = []
     ): mixed {
-        if ($data instanceof Artist && $operation instanceof Post) {
-            $data->setIsConfirmCreate(
-                $this->security->isGranted('ROLE_ADMIN')
-            );
+        if ($data instanceof Artist) {
+            $isAdmin = $this->security->isGranted('ROLE_ADMIN');
 
-            $data->setToBeConfirmed(
-                !$this->security->isGranted('ROLE_ADMIN')
-            );
+            if ($operation instanceof Post) {
+                $data->setIsConfirmCreate($isAdmin);
+                $data->setToBeConfirmed(!$isAdmin);
+            } elseif (($operation instanceof Put || $operation instanceof Patch) && !$isAdmin) {
+                // Un utilisateur non-admin qui modifie remet en attente de validation
+                $data->setIsConfirmCreate(false);
+                $data->setToBeConfirmed(true);
+            }
         }
 
         return $this->persistProcessor->process(

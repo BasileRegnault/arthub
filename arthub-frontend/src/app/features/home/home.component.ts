@@ -26,7 +26,8 @@ export class HomeComponent implements OnInit {
 
   artworks = signal<Artwork[]>([]);
   artists = signal<Artist[]>([]);
-  artistTopArtworks = signal<Map<number, Artwork>>(new Map());
+  discoveryArtworks = signal<Artwork[]>([]);
+  discoveryLoading = signal(false);
   stats = signal<Stats>({ artworks: 0, artists: 0, galleries: 0, users: 0 });
   loading = signal(true);
 
@@ -34,6 +35,22 @@ export class HomeComponent implements OnInit {
     this.loadArtworks();
     this.loadArtists();
     this.loadStats();
+    this.loadDiscovery();
+  }
+
+  loadDiscovery() {
+    this.discoveryLoading.set(true);
+    const randomPage = Math.floor(Math.random() * 15) + 1;
+    this.api.list('artworks', randomPage, 6, { 'order[createdAt]': 'asc' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          const items = (res.items || []).sort(() => Math.random() - 0.5);
+          this.discoveryArtworks.set(items);
+          this.discoveryLoading.set(false);
+        },
+        error: () => this.discoveryLoading.set(false)
+      });
   }
 
   private loadArtworks() {

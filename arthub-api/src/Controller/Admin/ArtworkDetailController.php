@@ -28,9 +28,11 @@ class ArtworkDetailController extends AbstractController
         EntityManagerInterface $em,
         Request $request
     ): JsonResponse {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
         $artwork = $artworkRepo->find($id);
         if (!$artwork) {
-            return $this->json(['message' => 'Artwork not found'], 404);
+            return $this->json(['message' => 'Œuvre introuvable'], 404);
         }
 
         $range = (int) $request->query->get('range', 30);

@@ -10,11 +10,15 @@ import { CommonModule } from '@angular/common';
 })
 export class BackButtonComponent {
   @Input() label: string = 'Retour';
-  @Input() route: string = '/'; // route par défaut
+  @Input() route: string | null = null;
 
   private router = inject(Router);
 
   goBack() {
-    this.router.navigate([this.route]);
+    if (this.route) {
+      this.router.navigate([this.route]);
+    } else {
+      history.back();
+    }
   }
 }

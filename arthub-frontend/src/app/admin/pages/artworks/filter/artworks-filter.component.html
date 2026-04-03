@@ -1,80 +1,58 @@
-<div class="bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 space-y-4">
-
-  <!-- Header -->
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 md:p-6 space-y-4">
   <div class="flex justify-between items-center mb-2">
-    <h3 class="text-lg font-semibold text-gray-700">Filtres</h3>
-    <span class="text-sm text-gray-400 hidden md:inline">Recherche avancée</span>
+    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Filtres</h3>
+    <span class="text-xs text-slate-400 hidden md:inline">Recherche avancée</span>
   </div>
 
-  <!-- Formulaire -->
-  <form [formGroup]="form"
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+  <form [formGroup]="form" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
 
-    <!-- Titre -->
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium text-gray-700">Titre</label>
-      <input
-        type="text"
-        formControlName="title"
-        placeholder="Titre"
-        class="border border-gray-300 rounded-lg px-3 py-2
-               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-      />
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Titre</label>
+      <input type="text" formControlName="title" placeholder="Titre"
+        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition" />
     </div>
 
-    <!-- Artist autocomplete (sans label comme demandé) -->
-    <app-artist-autocomplete formControlName="artist" class="w-full"></app-artist-autocomplete>
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Artiste</label>
+      <app-artist-autocomplete formControlName="artist" class="w-full"></app-artist-autocomplete>
+    </div>
 
-    <!-- CreatedBy autocomplete (sans label comme demandé) -->
-    <app-user-autocomplete formControlName="createdBy" class="w-full"></app-user-autocomplete>
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Créé par</label>
+      <app-user-autocomplete formControlName="createdBy" class="w-full"></app-user-autocomplete>
+    </div>
 
-    <!-- Type -->
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium text-gray-700">Type</label>
-      <select
-        formControlName="type"
-        class="border border-gray-300 rounded-lg px-3 py-2
-               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full">
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Type</label>
+      <select formControlName="type"
+        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition">
         <option value="">Tous</option>
-        @for (t of types; track t) {
-          <option [value]="t">{{ t }}</option>
+        @for (opt of typeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
         }
       </select>
     </div>
 
-    <!-- Style -->
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium text-gray-700">Style</label>
-      <select
-        formControlName="style"
-        class="border border-gray-300 rounded-lg px-3 py-2
-               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full">
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Style</label>
+      <select formControlName="style"
+        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition">
         <option value="">Tous</option>
-        @for (s of styles; track s) {
-          <option [value]="s">{{ s }}</option>
+        @for (opt of styleOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
         }
       </select>
     </div>
 
-    <!-- Location -->
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium text-gray-700">Localisation</label>
-      <input
-        type="text"
-        formControlName="location"
-        placeholder="Pays / Localisation"
-        class="border border-gray-300 rounded-lg px-3 py-2
-               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-      />
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Localisation</label>
+      <input type="text" formControlName="location" placeholder="Pays / Localisation"
+        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition" />
     </div>
 
-    <!-- Creation date between -->
     <app-date-range-input label="Date de création entre" [formGroup]="form" afterControl="creationDateAfter" beforeControl="creationDateBefore" />
-
-    <!-- CreatedAt between -->
     <app-date-range-input label="Créé (en base) entre" [formGroup]="form" afterControl="createdAtAfter" beforeControl="createdAtBefore" />
 
-    <!-- Affichage toggle -->
     <div class="md:col-span-4">
       <app-boolean-toggle
         label="Affichage"
@@ -83,22 +61,16 @@
         falseLabel="Masqué"
         (valueChange)="setIsDisplay($event)" />
     </div>
-
   </form>
 
-  <!-- Actions -->
-  <div class="flex justify-end gap-3 pt-3 border-t">
-    <button type="button"
-            (click)="resetFilters()"
-            class="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50 transition">
+  <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+    <button type="button" (click)="resetFilters()"
+      class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition text-sm">
       Réinitialiser
     </button>
-
-    <button type="button"
-            (click)="submit()"
-            class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+    <button type="button" (click)="submit()"
+      class="px-5 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition text-sm">
       Rechercher
     </button>
   </div>
-
 </div>

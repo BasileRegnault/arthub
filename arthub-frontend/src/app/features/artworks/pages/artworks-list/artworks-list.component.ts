@@ -10,6 +10,8 @@ import { ArtworkCardComponent } from '../../components/artwork-card.component';
 import { PaginationComponent } from '../../../../shared/components/pagination.component/pagination.component';
 import { SearchBarComponent } from '../../../../shared/components/search-bar.component/search-bar.component';
 import { AppArtistAutocompleteComponent } from '../../../../shared/components/app-artist-autocomplete.component/app-artist-autocomplete.component';
+import { AppCountryAutocompleteComponent } from '../../../../shared/components/app-country-autocomplete.component/app-country-autocomplete.component';
+import { ARTWORK_TYPE_OPTIONS, ARTWORK_STYLE_OPTIONS } from '../../../../core/models/enum/artwork-options';
 
 @Component({
   selector: 'app-artworks-list',
@@ -20,7 +22,8 @@ import { AppArtistAutocompleteComponent } from '../../../../shared/components/ap
     ArtworkCardComponent,
     PaginationComponent,
     SearchBarComponent,
-    AppArtistAutocompleteComponent
+    AppArtistAutocompleteComponent,
+    AppCountryAutocompleteComponent
   ],
   templateUrl: './artworks-list.component.html',
 })
@@ -32,6 +35,7 @@ export class ArtworksListComponent implements OnInit {
 
   artworks = signal<PaginatedResult<Artwork> | null>(null);
   loading = signal(false);
+  filtersOpen = signal(false);
 
   page = signal(1);
   itemsPerPage = 20;
@@ -47,12 +51,8 @@ export class ArtworksListComponent implements OnInit {
   sortBy = signal('recent');
 
   // Options disponibles
-  types = ['Peinture', 'Sculpture', 'Photographie', 'Dessin', 'Gravure', 'Installation'];
-  styles = ['Abstrait', 'Realisme', 'Impressionnisme', 'Moderne', 'Contemporain', 'Classique'];
-  locations = [
-    'France', 'Italie', 'Espagne', 'Allemagne', 'Royaume-Uni', 'Pays-Bas',
-    'Belgique', 'Etats-Unis', 'Japon', 'Chine', 'Russie', 'Autriche'
-  ];
+  typeOptions = ARTWORK_TYPE_OPTIONS;
+  styleOptions = ARTWORK_STYLE_OPTIONS;
   sortOptions = [
     { value: 'recent', label: 'Plus recents' },
     { value: 'oldest', label: 'Plus anciens' },
@@ -185,6 +185,11 @@ export class ArtworksListComponent implements OnInit {
 
   onArtistSelect(artist: SimpleArtist | null) {
     this.selectedArtist.set(artist);
+    this.onFilterChange();
+  }
+
+  onLocationSelect(name: string | null) {
+    this.selectedLocation.set(name ?? '');
     this.onFilterChange();
   }
 }

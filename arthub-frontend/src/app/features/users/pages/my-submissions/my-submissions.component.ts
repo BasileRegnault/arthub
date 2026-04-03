@@ -1,6 +1,8 @@
-import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { toSlugId } from '../../../../shared/utils/slugify';
+import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiPlatformService } from '../../../../core/services/api-platform.service';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -8,6 +10,16 @@ import { Artwork, Artist } from '../../../../core/models';
 import { environment } from '../../../../environments/environment';
 
 type SubmissionTab = 'artworks' | 'artists';
+
+interface ValidationDecision {
+  id: number;
+  subjectType: 'artist' | 'artwork';
+  subjectId: number;
+  status: 'approved' | 'rejected';
+  reason: string | null;
+  createdAt: string;
+  subject: any;
+}
 
 @Component({
   selector: 'app-my-submissions',
@@ -17,10 +29,12 @@ type SubmissionTab = 'artworks' | 'artists';
 })
 export class MySubmissionsComponent implements OnInit {
   private api = inject(ApiPlatformService<any>);
+  private http = inject(HttpClient);
   private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
 
   readonly apiBaseUrl = environment.apiBaseUrl;
+  readonly apiUrl = environment.apiUrl;
 
   activeTab = signal<SubmissionTab>('artworks');
 
@@ -34,9 +48,9 @@ export class MySubmissionsComponent implements OnInit {
   artistsLoading = signal(false);
   artistsTotal = signal(0);
 
-  // Historique (validées/refusées)
-  historyArtworks = signal<Artwork[]>([]);
-  historyArtists = signal<Artist[]>([]);
+  // Historique (décisions de validation)
+  validationHistory = signal<ValidationDecision[]>([]);
+  historyLoading = signal(false);
 
   ngOnInit() {
     this.authService.loadCurrentUser()
@@ -46,8 +60,7 @@ export class MySubmissionsComponent implements OnInit {
           if (user?.id) {
             this.loadPendingArtworks(user.id);
             this.loadPendingArtists(user.id);
-            this.loadHistoryArtworks(user.id);
-            this.loadHistoryArtists(user.id);
+            this.loadValidationHistory();
           }
         }
       });
@@ -95,29 +108,20 @@ export class MySubmissionsComponent implements OnInit {
       });
   }
 
-  private loadHistoryArtworks(userId: number) {
-    // Charger les œuvres validées ou refusées (isConfirmCreate = true ou rejectedAt != null)
-    this.api.list('artworks', 1, 20, {
-      createdBy: `/api/users/${userId}`,
-      isConfirmCreate: true,
-    })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: res => {
-          this.historyArtworks.set(res.items || []);
-        }
-      });
-  }
+  private loadValidationHistory() {
+    this.historyLoading.set(true);
 
-  private loadHistoryArtists(userId: number) {
-    this.api.list('artists', 1, 20, {
-      createdBy: `/api/users/${userId}`,
-      isConfirmCreate: true,
+    this.http.get<{ items: ValidationDecision[]; total: number }>(`${this.apiUrl}/my-validations`, {
+      params: { itemsPerPage: '50' }
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: res => {
-          this.historyArtists.set(res.items || []);
+          this.validationHistory.set(res.items || []);
+          this.historyLoading.set(false);
+        },
+        error: () => {
+          this.historyLoading.set(false);
         }
       });
   }
@@ -126,14 +130,35 @@ export class MySubmissionsComponent implements OnInit {
     if (artwork?.image?.contentUrl) {
       return this.apiBaseUrl + artwork.image.contentUrl;
     }
-    return 'assets/default-artwork.png';
+    return 'assets/default-image.svg';
   }
 
   getArtistImage(artist: any): string {
     if (artist?.profilePicture?.contentUrl) {
       return this.apiBaseUrl + artist.profilePicture.contentUrl;
     }
-    return 'assets/default-avatar.png';
+    return 'assets/default-avatar.svg';
+  }
+
+  getSubjectImage(decision: ValidationDecision): string {
+    if (decision.subjectType === 'artwork') {
+      return this.getArtworkImage(decision.subject);
+    }
+    return this.getArtistImage(decision.subject);
+  }
+
+  getSubjectName(decision: ValidationDecision): string {
+    const s = decision.subject;
+    if (!s) return `#${decision.subjectId}`;
+    if (decision.subjectType === 'artwork') return s.title || `#${decision.subjectId}`;
+    return `${s.firstname || ''} ${s.lastname || ''}`.trim() || `#${decision.subjectId}`;
+  }
+
+  getSubjectLink(decision: ValidationDecision): string[] {
+    const base = decision.subjectType === 'artwork' ? 'artworks' : 'artists';
+    const name = this.getSubjectName(decision);
+    const segment = toSlugId(decision.subjectId, name);
+    return [`/${base}`, segment];
   }
 
   getArtistName(artist: any): string {

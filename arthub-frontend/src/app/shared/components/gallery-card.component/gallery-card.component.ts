@@ -20,9 +20,15 @@ export class GalleryCardComponent {
 
   coverImageUrl = computed(() => {
     const g = this.gallery();
-    return g.coverImage?.contentUrl
-      ? environment.apiBaseUrl + g.coverImage.contentUrl
-      : 'assets/default-gallery.png';
+    if (g.coverImage?.contentUrl) return environment.apiBaseUrl + g.coverImage.contentUrl;
+    // Utiliser la première œuvre comme image de couverture
+    const artworks = g.artworks as any[];
+    if (artworks?.length > 0 && typeof artworks[0] === 'object') {
+      const first = artworks[0];
+      if (first.image?.contentUrl) return environment.apiBaseUrl + first.image.contentUrl;
+      if (first.imageUrl) return first.imageUrl;
+    }
+    return 'assets/default-gallery.svg';
   });
 
   artworksCount = computed(() => {

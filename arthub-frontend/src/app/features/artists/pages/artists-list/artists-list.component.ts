@@ -6,9 +6,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 import { ApiPlatformService } from '../../../../core/services/api-platform.service';
 import { Artist, Artwork } from '../../../../core/models';
+import { toSlugId } from '../../../../shared/utils/slugify';
 import { PaginatedResult } from '../../../../core/utils/hydra';
 import { PaginationComponent } from '../../../../shared/components/pagination.component/pagination.component';
 import { SearchBarComponent } from '../../../../shared/components/search-bar.component/search-bar.component';
+import { AppCountryAutocompleteComponent } from '../../../../shared/components/app-country-autocomplete.component/app-country-autocomplete.component';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -18,7 +20,8 @@ import { environment } from '../../../../environments/environment';
     CommonModule,
     FormsModule,
     PaginationComponent,
-    SearchBarComponent
+    SearchBarComponent,
+    AppCountryAutocompleteComponent
   ],
   templateUrl: './artists-list.component.html',
 })
@@ -32,6 +35,7 @@ export class ArtistsListComponent implements OnInit {
   artists = signal<PaginatedResult<Artist> | null>(null);
   artistTopArtworks = signal<Map<number, Artwork>>(new Map());
   loading = signal(false);
+  filtersOpen = signal(false);
 
   page = signal(1);
   itemsPerPage = 18;
@@ -39,7 +43,6 @@ export class ArtistsListComponent implements OnInit {
   searchTerm = signal('');
   selectedNationality = signal('');
 
-  nationalities = ['France', 'Italie', 'Espagne', 'États-Unis', 'Royaume-Uni', 'Allemagne', 'Japon', 'Chine'];
 
   ngOnInit() {
     this.route.queryParamMap
@@ -96,7 +99,7 @@ export class ArtistsListComponent implements OnInit {
     const requests: Record<string, ReturnType<typeof this.artworkApi.list>> = {};
     artistsWithId.forEach(artist => {
       requests[String(artist.id)] = this.artworkApi.list('artworks', 1, 1, {
-        'artist.id': artist.id,
+        'artist': `/api/artists/${artist.id}`,
         'order[viewsCount]': 'desc'
       });
     });
@@ -139,6 +142,11 @@ export class ArtistsListComponent implements OnInit {
     this.updateUrl();
   }
 
+  onNationalitySelect(name: string | null) {
+    this.selectedNationality.set(name ?? '');
+    this.onFilterChange();
+  }
+
   onPageChange(newPage: number) {
     this.page.set(newPage);
     this.updateUrl();
@@ -152,23 +160,26 @@ export class ArtistsListComponent implements OnInit {
   }
 
   getArtistImageUrl(artist: Artist): string {
-    return artist.profilePicture?.contentUrl
-      ? environment.apiBaseUrl + artist.profilePicture.contentUrl
-      : 'assets/default-avatar.png';
+    if (artist.profilePicture?.contentUrl) {
+      return environment.apiBaseUrl + artist.profilePicture.contentUrl;
+    }
+    if (artist.imageUrl) {
+      return artist.imageUrl; // URL absolue (ex: portrait Wikipedia)
+    }
+    return 'assets/default-avatar.svg';
   }
 
   getArtistTopArtworkUrl(artist: Artist): string | null {
     if (!artist.id) return null;
     const artwork = this.artistTopArtworks().get(artist.id);
-    if (artwork?.image?.contentUrl) {
-      return environment.apiBaseUrl + artwork.image.contentUrl;
-    }
+    if (artwork?.image?.contentUrl) return environment.apiBaseUrl + artwork.image.contentUrl;
+    if (artwork?.imageUrl) return artwork.imageUrl;
     return null;
   }
 
-  navigateToArtist(artistId?: number) {
-    if (artistId) {
-      this.router.navigate(['/artists', artistId]);
+  navigateToArtist(artist: Artist) {
+    if (artist?.id) {
+      this.router.navigate(['/artists', toSlugId(artist.id, `${artist.firstname} ${artist.lastname}`)]);
     }
   }
 }

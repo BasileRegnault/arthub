@@ -170,7 +170,7 @@ export class ArtistListComponent {
 
   onPreview(id?: number) {
     if (!id) return;
-    this.router.navigate(['/admin/preview/artists', id]);
+    window.open(`/artists/${id}`, '_blank');
   }
 
   // Tri (local sur la page)
@@ -248,7 +248,7 @@ export class ArtistListComponent {
       ...a,
       profilePictureUrl: a.profilePicture?.contentUrl
         ? environment.apiBaseUrl + a.profilePicture.contentUrl
-        : 'assets/default-image.png'
+        : 'assets/default-image.svg'
     })) || []
   );
 

@@ -12,6 +12,15 @@ class ArtInstituteApiService
     private const BASE_URL = 'https://api.artic.edu/api/v1';
     private const IIIF_URL = 'https://www.artic.edu/iiif/2';
 
+    private const AGENT_FIELDS = [
+        'id',
+        'title',
+        'birth_date',
+        'death_date',
+        'description',
+        'birth_place',
+    ];
+
     private const ARTWORK_FIELDS = [
         'id',
         'title',
@@ -90,6 +99,24 @@ class ArtInstituteApiService
     public function getImageUrl(string $imageId, int $width = 843): string
     {
         return sprintf('%s/%s/full/%d,/0/default.jpg', self::IIIF_URL, $imageId, $width);
+    }
+
+    /**
+     * Récupère les détails d'un artiste (agent) depuis l'API.
+     * Retourne un tableau vide si l'ID est invalide ou l'appel échoue.
+     */
+    public function fetchAgent(int $agentId): array
+    {
+        try {
+            $response = $this->httpClient->request('GET', self::BASE_URL . '/agents/' . $agentId, [
+                'query' => ['fields' => implode(',', self::AGENT_FIELDS)],
+                'timeout' => 5,
+            ]);
+
+            return $response->toArray()['data'] ?? [];
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /**

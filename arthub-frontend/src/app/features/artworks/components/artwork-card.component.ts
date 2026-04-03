@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { Artwork } from '../../../core/models/artwork.model';
 import { environment } from '../../../environments/environment';
 import { StarRatingComponent } from '../../../shared/components/star-rating.component/star-rating.component';
+import { toSlugId } from '../../../shared/utils/slugify';
 
 @Component({
   selector: 'app-artwork-card',
@@ -22,7 +23,7 @@ export class ArtworkCardComponent {
     if (art.imageUrl) {
       return art.imageUrl;
     }
-    return 'assets/default-image.png';
+    return 'assets/default-image.svg';
   });
 
   averageRating = computed(() => {
@@ -36,5 +37,10 @@ export class ArtworkCardComponent {
   ratingsCount = computed(() => {
     const art = this.artwork();
     return art.ratings ? (art.ratings as any[]).length : 0;
+  });
+
+  slugId = computed(() => {
+    const art = this.artwork();
+    return art.id && art.title ? toSlugId(art.id, art.title) : art.id;
   });
 }

@@ -1,48 +1,58 @@
-<div class="mb-4">
-      <label *ngIf="label && type !== 'toggle'" class="block text-sm font-medium mb-1 text-gray-700">
-        {{ label }}
+<div class="flex flex-col gap-1.5">
+  @if (label && type !== 'toggle') {
+    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
+      {{ label }}
+    </label>
+  }
+
+  @if (type === 'text' || type === 'date') {
+    <input
+      [formControl]="control"
+      [type]="type"
+      [placeholder]="placeholder ?? ''"
+      class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
+      [class.border-red-400]="control.invalid && control.touched" />
+  }
+
+  @if (type === 'textarea') {
+    <textarea
+      [formControl]="control"
+      [placeholder]="placeholder ?? ''"
+      rows="4"
+      class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition resize-none"
+      [class.border-red-400]="control.invalid && control.touched">
+    </textarea>
+  }
+
+  @if (type === 'select') {
+    <select
+      [formControl]="control"
+      class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
+      [class.border-red-400]="control.invalid && control.touched">
+      @for (opt of options; track opt) {
+        <option [value]="opt">{{ opt }}</option>
+      }
+      <ng-content></ng-content>
+    </select>
+  }
+
+  @if (type === 'toggle') {
+    <div class="flex items-center gap-3">
+      <label class="flex items-center cursor-pointer select-none">
+        <input type="checkbox" [formControl]="control" class="hidden peer" />
+        <span
+          class="w-11 h-6 rounded-full p-1 bg-slate-200 peer-checked:bg-slate-700 transition"
+          aria-hidden="true">
+          <span class="block w-4 h-4 bg-white rounded-full transform transition peer-checked:translate-x-5"></span>
+        </span>
+        <span class="ml-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ label }}</span>
       </label>
+    </div>
+  }
 
-      <!-- Champ texte -->
-      <input *ngIf="type === 'text' || type === 'date'"
-             [formControl]="control"
-             [type]="type"
-             [placeholder]="placeholder"
-             class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-
-      <!-- Zone de texte -->
-      <textarea *ngIf="type === 'textarea'"
-                [formControl]="control"
-                [placeholder]="placeholder"
-                rows="4"
-                class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-      </textarea>
-
-      <!-- Liste deroulante -->
-      <select *ngIf="type === 'select'"
-              [formControl]="control"
-              class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-        <option *ngFor="let opt of options" [value]="opt">{{ opt }}</option>
-        <ng-content></ng-content>
-      </select>
-
-       <!-- Bascule (isDisplay) -->
-      <div *ngIf="type === 'toggle'" class="flex items-center gap-3">
-        <label class="flex items-center cursor-pointer select-none">
-          <input type="checkbox" [formControl]="control" class="hidden peer" />
-          <span
-            class="w-11 h-6 rounded-full p-1 bg-gray-300 peer-checked:bg-blue-600 transition"
-            aria-hidden="true"
-          >
-            <span class="block w-4 h-4 bg-white rounded-full transform transition
-                         peer-checked:translate-x-5"></span>
-          </span>
-          <span class="ml-3 text-sm font-medium text-gray-700">{{ label }}</span>
-        </label>
-      </div>
-
-      <!-- Erreurs de validation -->
-      <div *ngIf="control.invalid && control.touched" class="text-red-500 text-sm mt-1">
-        {{ getErrorMessage() }}
-      </div>
+  @if (control.invalid && control.touched) {
+    <div class="text-red-500 text-xs mt-0.5">
+      {{ getErrorMessage() }}
+    </div>
+  }
 </div>

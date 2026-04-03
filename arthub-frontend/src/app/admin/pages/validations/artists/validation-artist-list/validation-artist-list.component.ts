@@ -52,7 +52,7 @@ export class ValidationArtistListComponent {
       ...a,
       imageUrl: a.profilePicture?.contentUrl
         ? environment.apiBaseUrl + a.profilePicture.contentUrl
-        : (a.imageUrl ?? 'assets/default-avatar.png')
+        : (a.imageUrl ?? 'assets/default-avatar.svg')
     })) || []
   );
 
@@ -104,7 +104,7 @@ export class ValidationArtistListComponent {
 
   onPreview(id?: number) {
     if (!id) return;
-    this.router.navigate(['/admin/preview/artists', id, 'preview']);
+    window.open(`/artists/${id}`, '_blank');
   }
 
   toggleSelection(id?: number) {

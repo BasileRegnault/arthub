@@ -83,7 +83,7 @@
 
               <td class="px-4 py-3">{{ artwork.type || '—' }}</td>
               <td class="px-4 py-3">{{ artwork.style || '—' }}</td>
-              <td class="px-4 py-3">{{ artwork.creationDate | dateDisplay:true }}</td>
+              <td class="px-4 py-3">{{ artwork.creationDate | dateDisplay }}</td>
               <td class="px-4 py-3">{{ artwork.location || '—' }}</td>
 
               <td class="px-4 py-3">
@@ -98,7 +98,7 @@
                 </div>
               </td>
 
-              <td class="px-4 py-3">{{ artwork.createdAt | dateDisplay:true }}</td>
+              <td class="px-4 py-3">{{ artwork.createdAt | dateDisplay }}</td>
 
               <td class="px-4 py-3 text-center">
                 <div class="inline-flex gap-2">

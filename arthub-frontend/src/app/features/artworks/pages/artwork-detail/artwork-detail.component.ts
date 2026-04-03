@@ -1,6 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { extractId, toSlugId } from '../../../../shared/utils/slugify';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiPlatformService } from '../../../../core/services/api-platform.service';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -85,14 +86,18 @@ export class ArtworkDetailComponent implements OnInit {
     const art = this.artwork();
     if (art?.image?.contentUrl) return environment.apiBaseUrl + art.image.contentUrl;
     if (art?.imageUrl) return art.imageUrl;
-    return 'assets/default-image.png';
+    return 'assets/default-image.svg';
   });
 
   artistImageUrl = computed(() => {
     const a = this.artist();
-    return a?.profilePicture?.contentUrl
-      ? environment.apiBaseUrl + a.profilePicture.contentUrl
-      : 'assets/default-avatar.png';
+    if (a?.profilePicture?.contentUrl) {
+      return environment.apiBaseUrl + a.profilePicture.contentUrl;
+    }
+    if (a?.imageUrl) {
+      return a.imageUrl;
+    }
+    return 'assets/default-avatar.svg';
   });
 
   averageRating = computed(() => {
@@ -132,12 +137,12 @@ export class ArtworkDetailComponent implements OnInit {
   });
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) {
+    const raw = this.route.snapshot.paramMap.get('id');
+    if (!raw) {
       this.router.navigate(['/artworks']);
       return;
     }
-    this.loadArtwork(id);
+    this.loadArtwork(extractId(raw));
   }
 
   private loadArtwork(id: string) {
@@ -147,13 +152,19 @@ export class ArtworkDetailComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (artwork: Artwork) => {
+          // Bloquer si non validé et utilisateur non admin
+          const pending = (artwork as any).toBeConfirmed === true || (artwork as any).isConfirmCreate === false;
+          if (pending && !this.authService.isAdmin()) {
+            this.loading.set(false);
+            this.router.navigate(['/artworks']);
+            return;
+          }
           this.artwork.set(artwork);
           this.loading.set(false);
           this.loadRelatedArtworks();
         },
         error: () => {
           this.loading.set(false);
-          alert('Erreur lors du chargement de l\'œuvre');
           this.router.navigate(['/artworks']);
         }
       });
@@ -260,9 +271,9 @@ export class ArtworkDetailComponent implements OnInit {
   }
 
   navigateToArtist() {
-    const artistId = this.artist()?.id;
-    if (artistId) {
-      this.router.navigate(['/artists', artistId]);
+    const a = this.artist();
+    if (a?.id) {
+      this.router.navigate(['/artists', toSlugId(a.id, `${a.firstname} ${a.lastname}`)]);
     }
   }
 

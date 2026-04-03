@@ -19,6 +19,7 @@ export class ClientHeaderComponent {
   contributeMenuOpen = signal(false);
 
   isAuthenticated = () => this.authService.isAuthenticated();
+  isAdmin = () => this.authService.isAdmin();
   currentUser = this.authService.currentUser;
 
   toggleMobileMenu() {

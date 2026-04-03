@@ -9,36 +9,72 @@
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Filters -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-slate-200">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Search -->
-        <app-search-bar
-          [placeholder]="'Rechercher un artiste...'"
-          [initialValue]="searchTerm()"
-          (searchChange)="onSearch($event)" />
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mb-8 overflow-hidden">
 
-        <!-- Nationality Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Nationalite</label>
-          <select
-            [(ngModel)]="selectedNationality"
-            (ngModelChange)="onFilterChange()"
-            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500">
-            <option value="">Toutes les nationalites</option>
-            @for (nationality of nationalities; track nationality) {
-              <option [value]="nationality">{{ nationality }}</option>
-            }
-          </select>
+      <!-- Bouton d'ouverture/fermeture des filtres -->
+      <button
+        (click)="filtersOpen.set(!filtersOpen())"
+        class="w-full flex items-center justify-between px-6 py-4 bg-slate-50 hover:bg-slate-100 transition-colors">
+        <div class="flex items-center gap-2 text-slate-700 font-semibold">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+          </svg>
+          Filtres
+        </div>
+        <svg
+          class="w-4 h-4 text-slate-400 transition-transform duration-200"
+          [class.rotate-180]="filtersOpen()"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+
+      @if (filtersOpen()) {
+      <div class="border-t border-slate-100"></div>
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Search -->
+          <div>
+            <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              Recherche
+            </label>
+            <app-search-bar
+              [placeholder]="'Rechercher un artiste...'"
+              [initialValue]="searchTerm()"
+              (searchChange)="onSearch($event)" />
+          </div>
+
+          <!-- Nationality Filter -->
+          <div>
+            <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+              </svg>
+              Nationalité
+            </label>
+            <app-country-autocomplete
+              [ngModel]="selectedNationality()"
+              (ngModelChange)="onNationalitySelect($event)"
+              [placeholder]="'Toutes les nationalités'" />
+          </div>
+        </div>
+
+        <!-- Divider + Reset -->
+        <div class="border-t border-slate-100 pt-3 flex justify-end">
+          <button
+            (click)="resetFilters()"
+            class="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Réinitialiser
+          </button>
         </div>
       </div>
-
-      <div class="flex justify-end mt-4">
-        <button
-          (click)="resetFilters()"
-          class="px-4 py-2 text-sm border border-slate-300 text-gray-700 rounded-lg hover:bg-slate-50 transition">
-          Reinitialiser les filtres
-        </button>
-      </div>
+      }
     </div>
 
     <!-- Loading -->
@@ -62,7 +98,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           @for (artist of artists()!.items; track artist.id) {
             <div
-              (click)="navigateToArtist(artist.id)"
+              (click)="navigateToArtist(artist)"
               class="bg-white rounded-xl shadow-md hover:shadow-xl transition cursor-pointer overflow-hidden group border border-slate-200 hover:border-slate-400">
               <!-- Cover Image - Top Artwork -->
               <div class="h-48 bg-slate-200 relative overflow-hidden">

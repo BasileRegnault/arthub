@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { environment } from '../../../../environments/environment';
-import { ArtworkStyle, ArtworkType, SimpleArtist } from '../../../../core/models';
+import { SimpleArtist } from '../../../../core/models';
+import { ARTWORK_TYPE_OPTIONS, ARTWORK_STYLE_OPTIONS } from '../../../../core/models/enum/artwork-options';
 import { ApiPlatformService } from '../../../../core/services/api-platform.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { FileUploadComponent } from "../../../../shared/components/file-upload.component/file-upload.component";
@@ -76,8 +77,8 @@ export class ArtworkFormComponent implements OnInit {
     isDisplay: [true],
   });
 
-  types = Object.values(ArtworkType);
-  styles = Object.values(ArtworkStyle);
+  typeOptions = ARTWORK_TYPE_OPTIONS;
+  styleOptions = ARTWORK_STYLE_OPTIONS;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');

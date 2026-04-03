@@ -26,27 +26,27 @@ class AppFixtures extends Fixture
 
     private const DEFAULT_SCALE = 1;
 
-    private const USERS_BASE = 8;
-    private const ARTISTS_BASE = 12;
-    private const ARTWORKS_BASE = 30;
+    private const USERS_BASE = 3;
+    private const ARTISTS_BASE = 3;
+    private const ARTWORKS_BASE = 6;
 
-    private const LOGIN_LOGS_MIN_BASE = 1;
-    private const LOGIN_LOGS_MAX_BASE = 5;
+    private const LOGIN_LOGS_MIN_BASE = 0;
+    private const LOGIN_LOGS_MAX_BASE = 2;
 
-    private const GALLERY_OWNERS_RATE_BASE = 40;
+    private const GALLERY_OWNERS_RATE_BASE = 10;
     private const GALLERY_ARTWORKS_MIN_BASE = 1;
-    private const GALLERY_ARTWORKS_MAX_BASE = 8;
+    private const GALLERY_ARTWORKS_MAX_BASE = 3;
 
     private const RATINGS_MIN_BASE = 0;
-    private const RATINGS_MAX_BASE = 6;
+    private const RATINGS_MAX_BASE = 3;
 
-    private const DAILY_VIEWS_DAYS_BACK_BASE = 30;
-    private const DAILY_VIEWS_ACTIVE_DAYS_MIN_BASE = 5;
+    private const DAILY_VIEWS_DAYS_BACK_BASE = 3;
+    private const DAILY_VIEWS_ACTIVE_DAYS_MIN_BASE = 2;
     private const DAILY_VIEWS_UNIQUE_MIN_BASE = 0;
-    private const DAILY_VIEWS_UNIQUE_MAX_BASE = 50;
+    private const DAILY_VIEWS_UNIQUE_MAX_BASE = 3;
 
-    private const ACTIVITY_LOGS_MIN_BASE = 60;
-    private const ACTIVITY_LOGS_MAX_BASE = 120;
+    private const ACTIVITY_LOGS_MIN_BASE = 3;
+    private const ACTIVITY_LOGS_MAX_BASE = 6;
 
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher
@@ -140,6 +140,18 @@ class AppFixtures extends Fixture
         $admin->setPassword($this->passwordHasher->hashPassword($admin, 'adminpass'));
         $manager->persist($admin);
         $users[] = $admin;
+
+
+        $user = new User();
+        $user->setUsername('user');
+        $user->setEmail('user@example.com');
+        $user->setRoles(['ROLE_USER']);
+        $user->setProfilePicture($userMedia);
+        $user->setCreatedAt(new \DateTimeImmutable('-2 years'));
+        $user->setUpdatedAt(new \DateTimeImmutable('-1 year'));
+        $user->setPassword($this->passwordHasher->hashPassword($user, 'userpass'));
+        $manager->persist($user);
+        $users[] = $user;
 
         $count = $this->scaledCount(self::USERS_BASE, $scale, 1);
 

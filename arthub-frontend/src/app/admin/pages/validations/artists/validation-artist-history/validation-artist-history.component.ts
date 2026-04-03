@@ -35,7 +35,7 @@ export class ValidationArtistHistoryComponent {
       const artist = v.subject;
       const imageUrl = artist?.profilePicture?.contentUrl
         ? environment.apiBaseUrl + artist.profilePicture.contentUrl
-        : (artist?.imageUrl ?? 'assets/default-avatar.png');
+        : (artist?.imageUrl ?? 'assets/default-avatar.svg');
       return { ...v, imageUrl };
     })
   );

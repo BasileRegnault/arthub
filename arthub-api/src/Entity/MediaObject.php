@@ -22,7 +22,9 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         new Get(),
         new GetCollection(),
         new Post(
-            inputFormats: ['multipart' => ['multipart/form-data']]
+            inputFormats: ['multipart' => ['multipart/form-data']],
+            security: "is_granted('ROLE_USER')",
+            securityMessage: "Vous devez être connecté pour uploader un fichier."
         )
     ]
 )]

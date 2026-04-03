@@ -1,8 +1,10 @@
 import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { extractId } from '../../../../shared/utils/slugify';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiPlatformService } from '../../../../core/services/api-platform.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { Artist, Artwork } from '../../../../core/models';
 import { environment } from '../../../../environments/environment';
 import { BreadcrumbComponent, BreadcrumbItem } from '../../../../shared/components/breadcrumb.component/breadcrumb.component';
@@ -22,6 +24,7 @@ export class ArtistDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private api = inject(ApiPlatformService<any>);
+  private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
 
   artist = signal<Artist | null>(null);
@@ -43,9 +46,13 @@ export class ArtistDetailComponent implements OnInit {
 
   profileImageUrl = computed(() => {
     const a = this.artist();
-    return a?.profilePicture?.contentUrl
-      ? environment.apiBaseUrl + a.profilePicture.contentUrl
-      : 'assets/default-avatar.png';
+    if (a?.profilePicture?.contentUrl) {
+      return environment.apiBaseUrl + a.profilePicture.contentUrl;
+    }
+    if (a?.imageUrl) {
+      return a.imageUrl;
+    }
+    return 'assets/default-avatar.svg';
   });
 
   breadcrumbs = computed<BreadcrumbItem[]>(() => {
@@ -58,12 +65,12 @@ export class ArtistDetailComponent implements OnInit {
   });
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) {
+    const raw = this.route.snapshot.paramMap.get('id');
+    if (!raw) {
       this.router.navigate(['/artists']);
       return;
     }
-    this.loadArtist(id);
+    this.loadArtist(extractId(raw));
   }
 
   private loadArtist(id: string) {
@@ -73,12 +80,18 @@ export class ArtistDetailComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (artist: Artist) => {
+          // Bloquer si non validé et utilisateur non admin
+          const pending = (artist as any).toBeConfirmed === true || (artist as any).isConfirmCreate === false;
+          if (pending && !this.authService.isAdmin()) {
+            this.loading.set(false);
+            this.router.navigate(['/artists']);
+            return;
+          }
           this.artist.set(artist);
           this.loading.set(false);
         },
         error: () => {
           this.loading.set(false);
-          alert('Erreur lors du chargement de l\'artiste');
           this.router.navigate(['/artists']);
         }
       });

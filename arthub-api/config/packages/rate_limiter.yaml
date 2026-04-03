@@ -4,8 +4,18 @@ framework:
       policy: 'sliding_window'
       limit: 10
       interval: '15 minutes'
-      
+
     login_ip_username:
-        policy: 'sliding_window'
-        limit: 10
-        interval: '15 minutes'    
+      policy: 'sliding_window'
+      limit: 10
+      interval: '15 minutes'
+
+    register_ip:
+      policy: 'sliding_window'
+      limit: 5
+      interval: '15 minutes'
+
+    forgot_password_ip:
+      policy: 'sliding_window'
+      limit: 3
+      interval: '1 hour'

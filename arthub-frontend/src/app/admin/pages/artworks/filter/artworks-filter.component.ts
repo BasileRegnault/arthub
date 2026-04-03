@@ -1,7 +1,8 @@
 import { Component, inject, input, output, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { ArtworkStyle, ArtworkType, SimpleArtist, SimpleUser } from '../../../../core/models';
+import { SimpleArtist, SimpleUser } from '../../../../core/models';
+import { ARTWORK_TYPE_OPTIONS, ARTWORK_STYLE_OPTIONS } from '../../../../core/models/enum/artwork-options';
 import { AppArtistAutocompleteComponent } from '../../../../shared/components/app-artist-autocomplete.component/app-artist-autocomplete.component';
 import { AppUserAutocompleteComponent } from '../../../../shared/components/app-user-autocomplete.component/app-user-autocomplete.component';
 import { DateRangeInputComponent } from '../../../../shared/components/date-range-input.component/date-range-input.component';
@@ -14,8 +15,8 @@ import { BooleanToggleComponent } from '../../../../shared/components/boolean-to
   templateUrl: './artworks-filter.component.html',
 })
 export class ArtworksFilterComponent {
-  types = Object.values(ArtworkType);
-  styles = Object.values(ArtworkStyle);
+  typeOptions = ARTWORK_TYPE_OPTIONS;
+  styleOptions = ARTWORK_STYLE_OPTIONS;
 
   // Sorties signal
   search = output<any>();

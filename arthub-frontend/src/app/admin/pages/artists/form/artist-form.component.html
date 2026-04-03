@@ -1,107 +1,55 @@
 <div class="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-xl border border-gray-100">
-
-  <!-- Bouton retour -->
-  <app-back-button label="Retour aux artistes" route="/admin/artists"></app-back-button>
+  <app-back-button label="Retour"></app-back-button>
 
   <h2 class="text-3xl font-semibold mb-6 text-gray-800">
     {{ isEdit ? 'Modifier un artiste' : 'Créer un artiste' }}
   </h2>
 
-  <!-- Global Error Alert -->
-  <app-global-error-alert
-    [error]="globalError()"
-    (dismiss)="globalError.set(null)">
-  </app-global-error-alert>
+  <app-global-error-alert [error]="globalError()" (dismiss)="globalError.set(null)"></app-global-error-alert>
 
   <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
-
-    <!-- Prénom + Nom -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <app-form-field
-        label="Prénom"
-        [control]="form.controls.firstname"
-        placeholder="Prénom de l'artiste">
-      </app-form-field>
-
-      <app-form-field
-        label="Nom"
-        [control]="form.controls.lastname"
-        placeholder="Nom de l'artiste">
-      </app-form-field>
+      <app-form-field label="Prénom" [control]="form.controls.firstname" placeholder="Prénom de l'artiste" />
+      <app-form-field label="Nom" [control]="form.controls.lastname" placeholder="Nom de l'artiste" />
     </div>
 
-    <!-- Nationalité -->
-    <app-country-autocomplete
-      label="Nationalité"
-      placeholder="Rechercher un pays..."
-      formControlName="nationality">
-    </app-country-autocomplete>
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Nationalité</label>
+      <app-country-autocomplete placeholder="Rechercher un pays..." formControlName="nationality" />
+    </div>
 
-    <!-- Dates -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <app-form-field
-        label="Date de naissance"
-        type="date"
-        [control]="form.controls.bornAt">
-      </app-form-field>
-
-      <app-form-field
-        label="Date de décès"
-        type="date"
-        [control]="form.controls.diedAt">
-      </app-form-field>
+      <app-form-field label="Date de naissance" type="date" [control]="form.controls.bornAt" />
+      <app-form-field label="Date de décès" type="date" [control]="form.controls.diedAt" />
     </div>
 
-    <!-- Biographie -->
-    <app-form-field
-      label="Biographie"
-      type="textarea"
-      [control]="form.controls.biography"
-      placeholder="Biographie de l'artiste">
-    </app-form-field>
+    <app-form-field label="Biographie" type="textarea" [control]="form.controls.biography" placeholder="Biographie de l'artiste" />
 
-    <!-- Photo de profil -->
-    <div class="space-y-2">
-      <label class="block text-sm font-medium text-gray-700">Photo de profil</label>
-
-      <app-file-upload
-        [file]="fileSignal()"
-        [initialPreview]="previewUrl()"
-        (fileChange)="onPreviewUpdate($event)">
-      </app-file-upload>
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Photo de profil</label>
+      <app-file-upload [file]="fileSignal()" [initialPreview]="previewUrl()" (fileChange)="onPreviewUpdate($event)" />
     </div>
 
-    <!-- Actions -->
     <div class="flex items-center justify-between pt-6">
       <div class="flex gap-3">
-        <button
-          type="submit"
-          [disabled]="submitting()"
-          class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition">
+        <button type="submit" [disabled]="submitting()"
+          class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg shadow-sm transition disabled:opacity-50">
           {{ isEdit ? 'Mettre à jour' : 'Créer' }}
         </button>
-
         @if (isEdit) {
-          <button
-            type="button"
-            (click)="onDelete()"
+          <button type="button" (click)="onDelete()"
             class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm transition">
             Supprimer
           </button>
         }
       </div>
-
       @if (submitting()) {
-        <div class="text-gray-500">
-          Envoi en cours…
-        </div>
+        <div class="text-gray-500">Envoi en cours…</div>
       }
     </div>
-
   </form>
 </div>
 
-<!-- Modal confirmation suppression -->
 <app-confirm-modal
   [isOpen]="confirmModalOpen()"
   title="Supprimer l'artiste"
@@ -110,7 +58,6 @@
   (onCancel)="handleCancelDelete()">
 </app-confirm-modal>
 
-<!-- Modal entités liées -->
 <app-related-entities-modal
   [isOpen]="relatedEntitiesModalOpen"
   [title]="relatedEntitiesTitle"

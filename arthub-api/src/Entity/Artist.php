@@ -41,10 +41,12 @@ use Symfony\Component\Validator\Constraints as Assert;
             securityMessage: "Vous devez être connecté pour créer un artiste."
         ),
         new Put(
+            processor: ArtistProcessor::class,
             security: "is_granted('ROLE_ADMIN') or object.getCreatedBy() == user",
             securityMessage: "Vous ne pouvez modifier que les artistes que vous avez créés."
         ),
         new Patch(
+            processor: ArtistProcessor::class,
             security: "is_granted('ROLE_ADMIN') or object.getCreatedBy() == user",
             securityMessage: "Vous ne pouvez modifier que les artistes que vous avez créés."
         ),

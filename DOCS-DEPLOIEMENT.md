@@ -11,9 +11,9 @@ ArtHub est un monorepo contenant :
 
 Le déploiement repose sur :
 - Un **VPS OVH** (Ubuntu 24.04) avec Docker
-- **GitHub Actions** pour le CI/CD automatique
-- **GitHub Container Registry (ghcr.io)** pour stocker les images Docker
+- **GitHub Actions** pour le CI/CD automatique (build directement sur le VPS via SSH)
 - **Certbot / Let's Encrypt** pour le SSL gratuit
+- **Brevo** pour l'envoi d'emails transactionnels
 
 ---
 
@@ -245,21 +245,26 @@ Dans GitHub → repo arthub → **Settings → Secrets and variables → Actions
 
 ### 4.2 Fonctionnement du pipeline
 
-Le fichier `.github/workflows/deploy.yml` se déclenche à chaque `git push` sur `main` :
+Le fichier `.github/workflows/deploy.yml` se déclenche à chaque `git push` sur `main`.
+Les images sont **buildées directement sur le VPS** (pas de registry externe) :
 
 ```
 git push origin main
         │
         ▼
 GitHub Actions
-  ├── Job 1 : Build image API  → ghcr.io/basilregnault/arthub-api:latest
-  ├── Job 2 : Build image Frontend → ghcr.io/basilregnault/arthub-frontend:latest
-  └── Job 3 : Deploy sur VPS
-        ├── git pull
-        ├── docker compose pull
-        ├── docker compose up -d
-        └── doctrine:migrations:migrate
+  └── Job : Deploy via SSH
+        ├── git pull origin main
+        ├── docker compose up -d --build --remove-orphans
+        ├── sleep 5 (attendre que l'API démarre)
+        ├── doctrine:migrations:migrate --env=prod
+        └── docker image prune -f (nettoyage des anciennes images)
 ```
+
+> **Pourquoi pas ghcr.io ?**
+> L'approche GitHub Container Registry a été abandonnée car elle causait des erreurs
+> `denied: not_found: owner not found` persistantes. Le build direct sur VPS est plus simple
+> et évite toute gestion de credentials pour le registry.
 
 ### 4.3 Workflow quotidien
 
@@ -274,7 +279,42 @@ git push origin main
 
 ---
 
-## PARTIE 5 — Opérations courantes
+## PARTIE 5 — Configuration email (Brevo)
+
+### 5.1 Créer un compte Brevo
+
+1. Créer un compte sur https://brevo.com
+2. Aller dans **SMTP & API → SMTP**
+3. Récupérer : login SMTP + mot de passe (généré dans l'interface)
+
+### 5.2 Configurer dans `.env` sur le VPS
+
+```bash
+nano /opt/arthub/.env
+```
+
+```env
+MAILER_DSN=smtp://LOGIN_BREVO:MOT_DE_PASSE_BREVO@smtp-relay.brevo.com:587
+```
+
+Puis redémarrer l'API :
+```bash
+cd /opt/arthub
+docker compose restart api
+```
+
+### 5.3 Tester l'envoi
+
+```bash
+docker compose exec api php bin/console app:test-email ton@email.com
+```
+
+> **Note** : En dev local, utiliser Mailtrap (https://mailtrap.io) :
+> `MAILER_DSN=smtp://LOGIN:MDP@sandbox.smtp.mailtrap.io:2525`
+
+---
+
+## PARTIE 6 — Opérations courantes
 
 ### Voir les logs
 
@@ -312,10 +352,29 @@ docker compose exec api php bin/console cache:clear --env=prod
 ```bash
 cd /opt/arthub
 git pull origin main
-docker compose pull
-docker compose up -d
+docker compose up -d --build --remove-orphans
 docker compose exec api php bin/console doctrine:migrations:migrate --env=prod --no-interaction
+docker image prune -f
 ```
+
+### Importer des données depuis Art Institute of Chicago
+
+```bash
+# Import simple (50 œuvres, descriptions en anglais)
+docker compose exec api php bin/console app:import-art-data --limit=50
+
+# Import avec traduction automatique EN→FR (plus lent, quota ~1000 mots/jour)
+docker compose exec api php bin/console app:import-art-data --limit=50 --translate
+
+# Import plus large
+docker compose exec api php bin/console app:import-art-data --limit=200
+```
+
+L'import récupère automatiquement :
+- Les œuvres avec leurs images (IIIF)
+- Les détails des artistes (dates, biographie, nationalité)
+- Les portraits Wikipedia des artistes
+- Les noms de pays traduits en français (cohérence avec le frontend)
 
 ### Sauvegarder la base de données
 
@@ -331,7 +390,7 @@ cat backup_20240101.sql | docker compose exec -T database psql -U arthub_user ar
 
 ---
 
-## PARTIE 6 — Problèmes rencontrés et solutions
+## PARTIE 7 — Problèmes rencontrés et solutions
 
 ### ❌ `repository name must be lowercase`
 Les noms d'images Docker doivent être en minuscules.
@@ -400,3 +459,58 @@ Vérifier avec `nslookup arthubb.fr` avant de relancer Certbot.
 ### ❌ `GalleryCollectionViewsProvider` class not found
 Le fichier PHP `GalleryCollectionViewsProvider.php` contenait une classe nommée différemment (`GalleryViewsCollectionDecorator`).
 → Renommer la classe pour qu'elle corresponde au nom du fichier, et mettre à jour `services.yaml`.
+
+### ❌ API healthcheck `unhealthy` / conteneur qui redémarre en boucle
+`php-fpm-healthcheck` n'est pas installé dans l'image Alpine de base.
+→ Remplacer dans `docker-compose.yml` :
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "ps aux | grep php-fpm | grep -v grep || exit 1"]
+```
+
+### ❌ CORS bloqué en production (`Access-Control-Allow-Origin` manquant)
+`nelmio_cors.yaml` avait les chemins (`paths`) avec l'URL de dev hardcodée.
+→ Utiliser la variable d'env dans `config/packages/nelmio_cors.yaml` :
+```yaml
+paths:
+  '^/api/':
+    allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+```
+Et dans `.env` :
+```env
+CORS_ALLOW_ORIGIN='^https://arthubb\.fr$'
+```
+
+### ❌ Redirection vers `/auth/login` pour les utilisateurs anonymes
+Le `loadStats()` de la page d'accueil appelait `/api/users` (endpoint protégé → 401).
+L'intercepteur JWT tentait un refresh, échouait, et redirigait tout le monde vers la connexion.
+→ Deux corrections :
+1. Supprimer l'appel à `/api/users` dans `home.component.ts`
+2. Dans `jwt.interceptor.ts`, ne rediriger que si l'utilisateur avait une session active :
+```typescript
+const hadSession = !!localStorage.getItem('refresh_token');
+auth.logout();
+if (hadSession) {
+  router.navigate(['/auth/login'], { queryParams: { reason: 'expired' } });
+}
+```
+
+### ❌ `denied: not_found: owner not found` (ghcr.io)
+Erreur persistante avec GitHub Container Registry.
+→ Abandonner l'approche registry. Passer au build direct sur VPS (voir PARTIE 4).
+
+### ❌ `DEFAULT_URI` not found
+Variable manquante dans `docker-compose.yml` pour le service API Platform.
+→ Ajouter dans le service `api` :
+```yaml
+DEFAULT_URI: ${API_BASE_URL:-https://api.arthubb.fr}
+```
+
+### ❌ Nginx crash après activation SSL
+La config Nginx référençait `/etc/letsencrypt/live/api.arthubb.fr/` qui n'existe pas
+(Certbot génère un seul certificat multi-domaine sous le nom du premier domaine).
+→ Les deux blocs `server` (arthubb.fr et api.arthubb.fr) doivent utiliser le même chemin :
+```nginx
+ssl_certificate /etc/letsencrypt/live/arthubb.fr/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/arthubb.fr/privkey.pem;
+```

@@ -62,7 +62,7 @@ export class GalleryListComponent {
       ...g,
       imageUrl: g.coverImage?.contentUrl
         ? environment.apiBaseUrl + g.coverImage.contentUrl
-        : 'assets/default-image.png'
+        : 'assets/default-image.svg'
     })) || []
   );
 
@@ -157,7 +157,7 @@ export class GalleryListComponent {
   // le reste est inchangé
   onPreview(id?: number) {
     if (!id) return;
-    this.router.navigate(['/admin/preview/galleries', id]);
+    window.open(`/galleries/${id}`, '_blank');
   }
 
   onViewDetails(id?: number) {

@@ -16,6 +16,7 @@ class DashboardController extends AbstractController
     #[Route('', name: 'stats', methods: ['GET'])]
     public function stats(Request $request): JsonResponse
     {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $limits = [
             'connections'   => (int) $request->query->get('limitConnections', 10),
             'artworks'      => (int) $request->query->get('limitArtworks', 10),
@@ -52,7 +53,7 @@ class DashboardController extends AbstractController
                 'ratingsOverTime'          => $this->dashboardService->getRatingsOverTime($monthsCharts),
                 'galleriesPublicPrivate'   => $this->dashboardService->getGalleriesPublicPrivate(),
 
-                // ✅ nouveaux charts (modèle views)
+                // ✅ nouveaux graphiques (basés sur les vues journalières)
                 'artworkViewsByDay'        => $this->dashboardService->getArtworkViewsByDay($daysViews),
                 'galleryViewsByDay'        => $this->dashboardService->getGalleryViewsByDay($daysViews),
             ],
@@ -65,7 +66,7 @@ class DashboardController extends AbstractController
                     $this->dashboardService->getLatestAdminActions($limits['adminActions'])
                 ),
 
-                // ✅ nouvelles tables utiles
+                // ✅ nouveaux tableaux de synthèse
                 'topArtworksByViews' => $this->dashboardService->getTopArtworksByViews($limits['topArtworks'], $daysViews),
                 'topGalleriesByViews'=> $this->dashboardService->getTopGalleriesByViews($limits['topGalleries'], $daysViews),
                 'latestRatings'      => $this->dashboardService->getLatestRatings(10),
@@ -84,7 +85,7 @@ class DashboardController extends AbstractController
 
         $entityId = isset($action['entity_id']) ? (int) $action['entity_id'] : null;
 
-        // ⚠️ Ton Angular attend entity_uri
+        // Le frontend Angular attend le champ entity_uri pour générer les liens
         $entityUri = null;
         if ($entityId !== null) {
             $entityUri = match ($entityName) {
@@ -103,7 +104,7 @@ class DashboardController extends AbstractController
             'entity_id'  => $entityId,
             'created_at' => $action['created_at'] ?? null,
             'username'   => $action['username'] ?? null,
-            'entity_uri' => $entityUri, // ✅ pour ton template Angular
+            'entity_uri' => $entityUri,
         ];
     }
 }

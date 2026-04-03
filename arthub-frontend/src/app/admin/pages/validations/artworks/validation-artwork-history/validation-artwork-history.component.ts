@@ -36,7 +36,7 @@ export class ValidationArtworkHistoryComponent {
       const artwork = v.subject;
       const imageUrl = artwork?.image?.contentUrl
         ? environment.apiBaseUrl + artwork.image.contentUrl
-        : (artwork?.imageUrl ?? 'assets/default-artwork.png');
+        : (artwork?.imageUrl ?? 'assets/default-image.svg');
       return { ...v, imageUrl };
     })
   );

@@ -60,7 +60,7 @@ class JWTLoginFailureListener
             }
 
             $event->setResponse(new JsonResponse([
-                'error' => 'Too many login attempts. Please try again later.'
+                'error' => 'Trop de tentatives de connexion. Veuillez réessayer dans quelques minutes.'
             ], 429, $headers));
 
             return;

@@ -31,7 +31,7 @@ class UserDetailController extends AbstractController
         ActivityLogRepository $activityLogRepository,
         SerializerInterface $serializer
     ): JsonResponse {
-        //$this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $user = $userRepository->find($id);
         if (!$user) {

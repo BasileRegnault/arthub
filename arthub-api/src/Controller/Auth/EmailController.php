@@ -11,20 +11,28 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 class EmailController extends AbstractController
 {
+    public function __construct(
+        private RateLimiterFactory $forgotPasswordIpLimiter,
+    ) {}
+
     /**
-     * Réinitialisation du mot de passe.
-     * Génère un nouveau mot de passe aléatoire et l'envoie par email à l'utilisateur.
+     * Étape 1 : demande de réinitialisation → envoie un lien avec token.
      */
     #[Route('/api/forgot-password', methods: ['POST'])]
     public function forgotPassword(
         Request $request,
         EntityManagerInterface $em,
         MailerInterface $mailer,
-        UserPasswordHasherInterface $hasher
     ): JsonResponse {
+        $limiter = $this->forgotPasswordIpLimiter->create($request->getClientIp());
+        if (!$limiter->consume(1)->isAccepted()) {
+            return $this->json(['message' => 'Trop de demandes, réessayez dans une heure.'], 429);
+        }
+
         $data = $request->toArray();
         $email = $data['email'] ?? null;
 
@@ -32,29 +40,28 @@ class EmailController extends AbstractController
             return $this->json(['message' => 'Email requis'], 400);
         }
 
-        // Recherche de l'utilisateur par email
-        $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
+        $successMessage = 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.';
 
-        // Réponse identique dans tous les cas pour ne pas révéler si le compte existe
-        $successMessage = 'Si un compte existe avec cet email, un nouveau mot de passe a été envoyé.';
+        $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
 
         if (!$user) {
             return $this->json(['message' => $successMessage]);
         }
 
-        // Génération d'un nouveau mot de passe aléatoire (12 caractères)
-        $newPassword = $this->generateRandomPassword();
-
-        // Mise à jour du mot de passe hashé en base de données
-        $user->setPassword($hasher->hashPassword($user, $newPassword));
+        // Générer un token sécurisé (64 caractères hex)
+        $token = bin2hex(random_bytes(32));
+        $user->setPasswordResetToken($token);
+        $user->setPasswordResetTokenExpiresAt(new \DateTimeImmutable('+1 hour'));
         $em->flush();
 
-        // Envoi de l'email avec le nouveau mot de passe en clair
+        $resetLink = $request->headers->get('Origin', 'https://arthubb.fr')
+            . '/auth/reset-password?token=' . $token;
+
         $message = (new Email())
             ->from('noreply@arthubb.fr')
             ->to($email)
-            ->subject('Votre nouveau mot de passe - ArtHub')
-            ->html($this->buildPasswordEmail($newPassword, $user->getUsername()));
+            ->subject('Réinitialisation de votre mot de passe - ArtHub')
+            ->html($this->buildResetEmail($resetLink, $user->getUsername()));
 
         $mailer->send($message);
 
@@ -62,46 +69,56 @@ class EmailController extends AbstractController
     }
 
     /**
-     * Génère un mot de passe aléatoire sécurisé.
+     * Étape 2 : vérification du token et mise à jour du mot de passe.
      */
-    private function generateRandomPassword(int $length = 12): string
-    {
-        $lower = 'abcdefghijklmnopqrstuvwxyz';
-        $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $digits = '0123456789';
-        $special = '!@#$%&*';
+    #[Route('/api/reset-password', methods: ['POST'])]
+    public function resetPassword(
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $hasher,
+    ): JsonResponse {
+        $data = $request->toArray();
+        $token = $data['token'] ?? null;
+        $newPassword = $data['password'] ?? null;
 
-        // Garantir au moins un caractère de chaque type
-        $password = $lower[random_int(0, strlen($lower) - 1)]
-            . $upper[random_int(0, strlen($upper) - 1)]
-            . $digits[random_int(0, strlen($digits) - 1)]
-            . $special[random_int(0, strlen($special) - 1)];
-
-        // Compléter avec des caractères aléatoires
-        $allChars = $lower . $upper . $digits . $special;
-        for ($i = 4; $i < $length; $i++) {
-            $password .= $allChars[random_int(0, strlen($allChars) - 1)];
+        if (!$token || !$newPassword) {
+            return $this->json(['message' => 'Token et mot de passe requis'], 400);
         }
 
-        // Mélanger le mot de passe pour éviter un pattern prévisible
-        return str_shuffle($password);
+        if (strlen($newPassword) < 8) {
+            return $this->json(['message' => 'Le mot de passe doit contenir au moins 8 caractères'], 400);
+        }
+
+        $user = $em->getRepository(User::class)->findOneBy(['passwordResetToken' => $token]);
+
+        if (!$user || !$user->isPasswordResetTokenValid()) {
+            return $this->json(['message' => 'Token invalide ou expiré'], 400);
+        }
+
+        $user->setPassword($hasher->hashPassword($user, $newPassword));
+        $user->setPasswordResetToken(null);
+        $user->setPasswordResetTokenExpiresAt(null);
+        $em->flush();
+
+        return $this->json(['message' => 'Mot de passe réinitialisé avec succès.']);
     }
 
-    /**
-     * Construit le contenu HTML de l'email de réinitialisation.
-     */
-    private function buildPasswordEmail(string $password, string $username): string
+    private function buildResetEmail(string $resetLink, string $username): string
     {
         return <<<HTML
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #333;">Bonjour {$username},</h2>
             <p>Vous avez demandé la réinitialisation de votre mot de passe sur <strong>ArtHub</strong>.</p>
-            <p>Voici votre nouveau mot de passe :</p>
-            <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 2px; margin: 20px 0; border: 1px solid #ddd;">
-                {$password}
+            <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Ce lien est valable <strong>1 heure</strong>.</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{$resetLink}"
+                   style="background: #1e293b; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                    Réinitialiser mon mot de passe
+                </a>
             </div>
-            <p style="color: #666;">Nous vous recommandons de changer ce mot de passe après votre prochaine connexion.</p>
-            <p style="color: #999; font-size: 12px;">Si vous n'avez pas fait cette demande, contactez-nous immédiatement.</p>
+            <p style="color: #666;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
+            <p style="color: #666; word-break: break-all; font-size: 12px;">{$resetLink}</p>
+            <p style="color: #999; font-size: 12px;">Si vous n'avez pas fait cette demande, ignorez cet email.</p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
             <p style="color: #999; font-size: 12px;">L'équipe ArtHub</p>
         </div>

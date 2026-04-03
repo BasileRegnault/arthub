@@ -12,11 +12,15 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 class RegisterController extends AbstractController
 {
 
-    public function __construct(private IpHasher $ipHasher) {}
+    public function __construct(
+        private IpHasher $ipHasher,
+        private RateLimiterFactory $registerIpLimiter,
+    ) {}
 
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
     public function register(
@@ -25,6 +29,11 @@ class RegisterController extends AbstractController
         EntityManagerInterface $em
     ): JsonResponse
     {
+        $limiter = $this->registerIpLimiter->create($request->getClientIp());
+        if (!$limiter->consume(1)->isAccepted()) {
+            return new JsonResponse(['error' => 'Trop de tentatives, réessayez dans 15 minutes.'], 429);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         $email = $data['email'] ?? null;

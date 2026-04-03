@@ -1,74 +1,76 @@
 <div class="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-xl border border-gray-100">
-  <!-- Bouton retour -->
-  <app-back-button label="Retour aux œuvres" route="/admin/artworks"></app-back-button>
+  <app-back-button label="Retour"></app-back-button>
 
   <h2 class="text-3xl font-semibold mb-6 text-gray-800">
     {{ isEdit ? 'Modifier une œuvre' : 'Créer une nouvelle œuvre' }}
   </h2>
 
-  <!-- Global Error Alert -->
-  <app-global-error-alert
-    [error]="globalError()"
-    (dismiss)="globalError.set(null)">
-  </app-global-error-alert>
+  <app-global-error-alert [error]="globalError()" (dismiss)="globalError.set(null)"></app-global-error-alert>
 
   <form (ngSubmit)="submit()" [formGroup]="form" class="space-y-6">
+    <app-form-field label="Titre" [control]="form.controls.title" placeholder="Entrez le titre de l'œuvre" />
 
-    <!-- Title -->
-    <app-form-field label="Titre" [control]="form.controls.title" placeholder="Entrez le titre de l'œuvre"></app-form-field>
-
-    <!-- Type + Style -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <app-form-field label="Type" type="select" [control]="form.controls.type" [options]="types" placeholder="Sélectionnez un type"></app-form-field>
-      <app-form-field label="Style" type="select" [control]="form.controls.style" [options]="styles" placeholder="Sélectionnez un style" ></app-form-field>
+      <div class="flex flex-col gap-1.5">
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Type</label>
+        <select formControlName="type"
+          class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition">
+          <option value="">Sélectionnez un type</option>
+          @for (opt of typeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Style</label>
+        <select formControlName="style"
+          class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition">
+          <option value="">Sélectionnez un style</option>
+          @for (opt of styleOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
     </div>
 
-    <!-- Date -->
-    <app-form-field label="Date de création" type="date" [control]="form.controls.creationDate" placeholder="Sélectionnez une date"></app-form-field>
+    <app-form-field label="Date de création" type="date" [control]="form.controls.creationDate" placeholder="Sélectionnez une date" />
 
-    <!-- Artist autocomplete -->
-    <app-artist-autocomplete formControlName="artist"></app-artist-autocomplete>
-
-    <!-- Description -->
-    <app-form-field label="Description" type="textarea" [control]="form.controls.description" placeholder="Écrivez une description..."></app-form-field>
-
-    <!-- Image -->
-    <div class="flex items-start gap-4">
-      <app-file-upload [file]="fileSignal()" [initialPreview]="previewUrl()" (fileChange)="fileSignal.set($event)"></app-file-upload>
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Artiste</label>
+      <app-artist-autocomplete formControlName="artist" />
     </div>
 
-    <!-- Localisation -->
-    <app-country-autocomplete
-      label="Localisation"
-      placeholder="Rechercher un pays..."
-      formControlName="location">
-    </app-country-autocomplete>
+    <app-form-field label="Description" type="textarea" [control]="form.controls.description" placeholder="Écrivez une description..." />
 
-    <!-- Afficher (isDisplay) -->
-    <app-form-field label="Afficher cette œuvre" type="toggle" [control]="form.controls.isDisplay"></app-form-field>
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Image</label>
+      <app-file-upload [file]="fileSignal()" [initialPreview]="previewUrl()" (fileChange)="fileSignal.set($event)" />
+    </div>
 
-    <!-- Actions -->
+    <div class="flex flex-col gap-1.5">
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Localisation</label>
+      <app-country-autocomplete placeholder="Rechercher un pays..." formControlName="location" />
+    </div>
+
+    <app-form-field label="Afficher cette œuvre" type="toggle" [control]="form.controls.isDisplay" />
+
     <div class="flex items-center justify-between mt-6">
       <div class="flex gap-3">
         <button type="submit"
-                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition">
+          class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg shadow-sm transition">
           {{ isEdit ? 'Mettre à jour' : 'Créer' }}
         </button>
-
         @if (isEdit) {
-          <button type="button"
-                  (click)="onDelete()"
-                  class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm transition">
+          <button type="button" (click)="onDelete()"
+            class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm transition">
             Supprimer
           </button>
         }
       </div>
-
       @if (submitting()) {
         <div class="text-gray-500">Envoi en cours...</div>
       }
     </div>
-
   </form>
 </div>
 
@@ -80,7 +82,6 @@
   (onCancel)="handleCancelDelete()">
 </app-confirm-modal>
 
-<!-- Modal entités liées -->
 <app-related-entities-modal
   [isOpen]="relatedEntitiesModalOpen"
   [title]="relatedEntitiesTitle"

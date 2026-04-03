@@ -24,7 +24,7 @@ class ArtistDetailController extends AbstractController
         ActivityLogRepository $activityLogRepository,
         SerializerInterface $serializer
     ): JsonResponse {
-        // $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $artist = $artistRepository->find($id);
         if (!$artist) {

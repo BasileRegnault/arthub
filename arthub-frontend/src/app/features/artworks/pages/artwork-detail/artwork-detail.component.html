@@ -19,7 +19,7 @@
       <app-breadcrumb [items]="breadcrumbs()" />
     </div>
 
-    <!-- Main Content -->
+    <!-- Contenu principal -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
       <!-- Image Column (Sticky) -->
       <div class="lg:sticky lg:top-24 lg:self-start">
@@ -27,9 +27,10 @@
           <img
             [src]="imageUrl()"
             [alt]="artwork()!.title"
-            class="w-full h-full object-cover">
+            class="w-full h-full object-cover"
+            (error)="$any($event.target).src='assets/default-image.svg'">
 
-          <!-- Action Buttons Overlay -->
+          <!-- Boutons d'action superposés -->
           <div class="absolute top-6 right-6 flex gap-3">
             <button
               class="p-4 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:bg-white hover:scale-110 transition-all duration-300"
@@ -56,7 +57,7 @@
             {{ artwork()!.title }}
           </h1>
 
-          <!-- Artist Card (Enhanced) -->
+          <!-- Carte artiste -->
           @if (artist()) {
             <div class="bg-gradient-to-br from-slate-50 to-stone-50 rounded-3xl p-6 border-2 border-slate-200 shadow-lg">
               <div class="flex items-start gap-4">
@@ -106,7 +107,7 @@
           }
         </div>
 
-        <!-- ALL Metadata / Properties Section -->
+        <!-- Métadonnées de l'œuvre -->
         <div class="bg-white rounded-3xl p-8 border-2 border-slate-200 shadow-lg">
           <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <span class="w-2 h-8 bg-slate-700 rounded-full"></span>
@@ -172,7 +173,7 @@
       </div>
     </div>
 
-    <!-- Amazon-Style Reviews Section -->
+    <!-- Avis des utilisateurs -->
     <section class="py-8 border-t-2 border-slate-200">
       <div class="flex items-center gap-4 mb-8">
         <div class="h-1 w-16 bg-slate-700 rounded-full"></div>
@@ -216,7 +217,7 @@
           </div>
         </div>
 
-        <!-- Add Review CTA -->
+        <!-- Déposer un avis -->
         <div class="mt-8 pt-6 border-t border-slate-200">
           @if (isAuthenticated()) {
             @if (getUserRating()) {
@@ -261,7 +262,7 @@
         </div>
       </div>
 
-      <!-- Ratings List -->
+      <!-- Liste des avis -->
       @if (ratings().length > 0) {
         <div class="space-y-4">
           @for (rating of ratings(); track rating.id) {
@@ -301,7 +302,7 @@
           }
         </div>
 
-        <!-- Load More Button -->
+        <!-- Charger plus d'avis -->
         @if (hasMoreRatings()) {
           <div class="mt-6 text-center">
             <button
@@ -351,7 +352,7 @@
   </div>
 }
 
-<!-- Rating Modal -->
+<!-- Modale de notation -->
 @if (ratingModalOpen()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" (click)="closeRatingModal()">
     <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full p-8 border-4 border-slate-200 animate-scale" (click)="$event.stopPropagation()">

@@ -22,7 +22,7 @@ class ValidationListController extends AbstractController
         EntityManagerInterface $em,
         NormalizerInterface $normalizer
     ): JsonResponse {
-        //$this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $page = max(1, (int) $request->query->get('page', 1));
         $itemsPerPage = min(100, max(1, (int) $request->query->get('itemsPerPage', 10)));
@@ -36,7 +36,7 @@ class ValidationListController extends AbstractController
         };
 
         if ($typeRaw && !$subjectType) {
-            return $this->json(['message' => 'Invalid subjectType'], 400);
+            return $this->json(['message' => 'Type de sujet invalide'], 400);
         }
 
         $subjectId = $request->query->get('subjectId');
