@@ -4,6 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    libretranslate_api_key: ''
 
 services:
     # default configuration for services in *this* file
@@ -66,7 +67,7 @@ services:
     App\Service\TranslationService:
         arguments:
             $libreTranslateUrl: '%env(LIBRETRANSLATE_URL)%'
-            $libreTranslateApiKey: '%env(default::LIBRETRANSLATE_API_KEY)%'
+            $libreTranslateApiKey: '%env(default:libretranslate_api_key:LIBRETRANSLATE_API_KEY)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
